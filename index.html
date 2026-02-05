@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Who's The Dumbass? | IQ Leaderboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0a0a0f;
+            color: #fff;
+            font-family: 'SF Pro', -apple-system, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+        .container {
+            text-align: center;
+            padding: 40px;
+        }
+        h1 {
+            font-size: 3rem;
+            background: linear-gradient(135deg, #ff6b6b, #feca57, #48dbfb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 20px;
+        }
+        .subtitle {
+            color: #888;
+            font-size: 1.2rem;
+            margin-bottom: 40px;
+        }
+        .loading {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .dot {
+            width: 12px;
+            height: 12px;
+            background: #ff6b6b;
+            border-radius: 50%;
+            animation: bounce 0.6s infinite alternate;
+        }
+        .dot:nth-child(2) { animation-delay: 0.2s; background: #feca57; }
+        .dot:nth-child(3) { animation-delay: 0.4s; background: #48dbfb; }
+        @keyframes bounce {
+            to { transform: translateY(-10px); }
+        }
+        .status {
+            color: #48dbfb;
+            font-size: 0.9rem;
+        }
+        .agents {
+            margin-top: 40px;
+            padding: 20px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            text-align: left;
+            max-width: 400px;
+        }
+        .agent {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .agent:last-child { border: none; }
+        .agent-status { 
+            width: 8px; 
+            height: 8px; 
+            background: #feca57; 
+            border-radius: 50%;
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧠 Who's The Dumbass?</h1>
+        <p class="subtitle">The Ultimate IQ Leaderboard</p>
+        
+        <div class="loading">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+        </div>
+        
+        <p class="status">⚡ Building in progress...</p>
+        
+        <div class="agents">
+            <div class="agent">
+                <div class="agent-status"></div>
+                <span>Frontend Agent - Building UI</span>
+            </div>
+            <div class="agent">
+                <div class="agent-status"></div>
+                <span>Backend Agent - Building API</span>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Auto-refresh every 30 seconds
+        setTimeout(() => location.reload(), 30000);
+    </script>
+</body>
+</html>
