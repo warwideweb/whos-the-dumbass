@@ -1922,14 +1922,14 @@
                 badgesHtml += `<span class="badge ${badge}">${badge.toUpperCase()}</span>`;
             });
             
-            // Links
+            // Links - show for 140+ IQ OR paid boosters
             let linksHtml = '';
-            if (user.iq >= 140 && user.link) {
-                // Handle link with or without protocol
+            const canHaveLink = user.iq >= 140 || user.boost > 0;
+            if (canHaveLink && user.link) {
                 const href = user.link.startsWith('http') ? user.link : `https://${user.link}`;
                 const displayText = user.link.replace(/^https?:\/\//, '').split('/')[0];
                 linksHtml = `<a href="${href}" target="_blank" rel="noopener">🔗 ${displayText}</a>`;
-            } else if (user.iq < 140) {
+            } else if (!canHaveLink) {
                 linksHtml = `<span class="too-stupid">TOO STUPID FOR LINKS</span>`;
             } else {
                 linksHtml = `<span style="color: var(--text-muted)">—</span>`;
@@ -2085,6 +2085,21 @@
                 if (verifyData.ok) {
                     showToast(`✅ Payment verified! +${verifyData.boost} boost! New rank: #${verifyData.newRank}`);
                     loadLeaderboard(); // Refresh
+                    
+                    // Show link popup - they can now add links since they paid!
+                    const iq = parseInt(localStorage.getItem('wtd_iq_score') || '0');
+                    if (iq < 140) {
+                        // Only show if they didn't already qualify by IQ
+                        const overlay = document.getElementById('linkPopupOverlay');
+                        const title = document.getElementById('linkPopupTitle');
+                        const body = document.getElementById('linkPopupBody');
+                        const inputSection = document.getElementById('linkInputSection');
+                        title.textContent = "💰 Money talks!";
+                        title.style.color = 'var(--neon-purple)';
+                        body.textContent = "You paid to boost. Now you can add your link to the leaderboard!";
+                        inputSection.style.display = 'block';
+                        overlay.style.display = 'flex';
+                    }
                 } else {
                     showToast('⚠️ Payment sent but verification pending. Contact support with tx: ' + signature.substring(0, 20) + '...');
                 }
@@ -2132,7 +2147,7 @@
             document.getElementById('testSection').scrollIntoView({ behavior: 'smooth' });
         }
 
-        // ===== LINK POPUP (140+) =====
+        // ===== LINK POPUP (140+ or paid) =====
         function showLinkPopup(iq) {
             const overlay = document.getElementById('linkPopupOverlay');
             const title = document.getElementById('linkPopupTitle');
@@ -2145,16 +2160,16 @@
                 body.textContent = "You unlocked link posting. Add your link to the leaderboard.";
                 inputSection.style.display = 'block';
             } else {
-                title.textContent = "❌ Nope.";
+                title.textContent = "❌ Too dumb for links.";
                 title.style.color = 'var(--neon-red)';
-                body.textContent = "You didn't unlock link posting. Score 140+ to post a link.";
+                body.textContent = "Score 140+ OR pay to boost your ranking to unlock link posting.";
                 inputSection.style.display = 'none';
             }
             
             overlay.style.display = 'flex';
         }
 
-        function saveLinkFromPopup() {
+        async function saveLinkFromPopup() {
             let url = document.getElementById('linkPopupInput').value.trim();
             if (!url) {
                 showToast('❌ Enter a URL first');
@@ -2172,14 +2187,33 @@
                 return;
             }
             
-            localStorage.setItem('wtd_user_url', url);
-            showToast('✅ Link saved! It will show on the leaderboard.');
-            closePopup();
+            // Get user ID
+            const userId = localStorage.getItem('wtd_user_id');
+            if (!userId) {
+                showToast('❌ User ID not found');
+                return;
+            }
             
-            // Update leaderboard
-            const username = localStorage.getItem('wtd_username') || 'Anonymous';
-            const iq = parseInt(localStorage.getItem('wtd_iq_score') || '0');
-            addToLeaderboard(username, iq, url);
+            // Save to backend
+            try {
+                const res = await fetch(`${CONFIG.apiBase}/save-link`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId, link: url })
+                });
+                const data = await res.json();
+                
+                if (data.ok) {
+                    localStorage.setItem('wtd_user_url', url);
+                    showToast('✅ Link saved!');
+                    closePopup();
+                    loadLeaderboard();
+                } else {
+                    showToast(`❌ ${data.message || data.error}`);
+                }
+            } catch (e) {
+                showToast('❌ Failed to save link');
+            }
         }
 
         function closePopup() {
