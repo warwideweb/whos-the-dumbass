@@ -1455,15 +1455,30 @@
                     document.getElementById('timerDisplay').style.display = 'none';
                 } else {
                     let errMsg = data.error || 'Verification failed';
-                    if (errMsg === 'invalid_format_expected_IQ2RES') errMsg = 'Response must be IQ2RES::... format';
-                    if (errMsg === 'invalid_or_expired_nonce') errMsg = 'Nonce expired. Get a new prompt.';
-                    if (errMsg === 'nonce_already_used') errMsg = 'Already verified. Get a new prompt.';
-                    if (errMsg === 'invalid_base64url') errMsg = 'Invalid encoding. Copy exact response from ChatGPT.';
-                    if (errMsg === 'check_digit_mismatch') errMsg = 'Check digit failed. Ask ChatGPT to try again.';
-                    if (errMsg.startsWith('missing_key')) errMsg = 'Missing category. Ask ChatGPT to include all 28.';
-                    if (errMsg.startsWith('not_4_decimals')) errMsg = 'Scores need exactly 4 decimals. Ask ChatGPT to fix.';
+                    // User-friendly error messages
+                    const errorMap = {
+                        'invalid_format_expected_IQ2RES': '❌ Response must start with IQ2RES:: - Copy exact output from ChatGPT',
+                        'invalid_or_expired_nonce': '⏱️ Prompt expired. Click COPY PROMPT to get a new one.',
+                        'nonce_already_used': '🔒 Already used. Click COPY PROMPT for a new one.',
+                        'invalid_base64url': '❌ Corrupted response. Copy the EXACT IQ2RES::... line from ChatGPT',
+                        'check_digit_mismatch': '❌ Invalid scores. Tell ChatGPT: "The check digits don\'t match. Try again."',
+                        'insufficient_decimal_variation': '❌ Scores too similar. Tell ChatGPT: "Vary the decimal values more."',
+                        'timestamp_mismatch': '❌ Wrong prompt. Use the most recent COPY PROMPT.',
+                        'decoded_not_object': '❌ ChatGPT gave invalid JSON. Ask it to try again.',
+                        'missing_profile': '❌ Missing profile data. Ask ChatGPT to include all 28 categories.',
+                        'invalid_context_messages': '❌ context_messages must be an integer.',
+                        'analysis_summary_too_long': '❌ Summary too long (max 240 chars).',
+                        'analysis_summary_invalid_chars': '❌ Summary has invalid characters. ASCII only.',
+                    };
                     
-                    showToast(`❌ ${errMsg}`);
+                    // Check for partial matches
+                    if (errMsg.startsWith('missing_key:')) errMsg = `❌ Missing: ${errMsg.split(':')[1]}. Ask ChatGPT to include it.`;
+                    else if (errMsg.startsWith('not_number:')) errMsg = `❌ ${errMsg.split(':')[1]} must be a number, not a string.`;
+                    else if (errMsg.startsWith('not_4_decimals:')) errMsg = `❌ ${errMsg.split(':')[1]} needs exactly 4 decimal places.`;
+                    else if (errMsg.startsWith('out_of_range:')) errMsg = `❌ ${errMsg.split(':')[1]} must be 0-100.`;
+                    else errMsg = errorMap[errMsg] || `❌ Error: ${errMsg}`;
+                    
+                    showToast(errMsg);
                     hasSubmitted = false;
                     submitBtn.innerHTML = '<span>🚀</span> GO / VERIFY';
                     submitBtn.disabled = false;
