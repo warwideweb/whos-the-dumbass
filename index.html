@@ -1142,7 +1142,7 @@
                         <ol style="color: var(--text-secondary); font-size: 0.95rem; padding-left: 24px; line-height: 1.8;">
                             <li>Open ChatGPT, Claude, or Gemini</li>
                             <li>Paste the prompt + your conversation</li>
-                            <li>Copy the <strong style="color: var(--neon-purple);">IQ2::...</strong> response</li>
+                            <li>Copy the <strong style="color: var(--neon-purple);">IQ2RES::...</strong> response</li>
                             <li>Paste it below</li>
                         </ol>
                     </div>
@@ -1151,7 +1151,7 @@
                         <textarea 
                             class="response-input" 
                             id="responseInput" 
-                            placeholder="Paste the IQ2::... response here"
+                            placeholder="Paste the IQ2RES::... response here"
                             oninput="handleResponseInput()"
                             style="min-height: 100px;"
                         ></textarea>
@@ -1442,7 +1442,7 @@
 
         function handleResponseInput() {
             const response = document.getElementById('responseInput').value;
-            const hasIQ2 = response.includes('IQ2::');
+            const hasIQ2 = response.includes('IQ2RES::') || response.includes('IQ2::');
             const username = document.getElementById('usernameInput').value.trim();
             
             document.getElementById('submitBtn').disabled = !(hasIQ2 && username.length >= 2 && currentNonce);
@@ -1495,7 +1495,7 @@
             const username = document.getElementById('usernameInput').value.trim();
             const hasUsername = username.length >= 2;
             const response = document.getElementById('responseInput')?.value || '';
-            const hasResponse = response.includes('IQ2::');
+            const hasResponse = response.includes('IQ2RES::') || response.includes('IQ2::');
             const hasNonce = !!currentNonce;
             
             document.getElementById('submitBtn').disabled = !(hasResponse && hasUsername && hasNonce);
@@ -1511,10 +1511,10 @@
             
             let response = document.getElementById('responseInput').value;
             
-            // Extract the IQ2:: line (format: IQ2::nonce::scores::summary)
-            const match = response.match(/IQ2::[a-f0-9]+::[0-9,.\s-]+::.+/i);
+            // Extract the IQ2RES:: or IQ2:: line
+            const match = response.match(/IQ2RES::[A-Za-z0-9_-]+/) || response.match(/IQ2::[a-f0-9]+::[0-9,.\s-]+::.+/i);
             if (!match) {
-                showToast('❌ Response must contain IQ2::... from the AI');
+                showToast('❌ Response must contain IQ2RES::... from the AI');
                 return;
             }
             
@@ -1552,7 +1552,7 @@
                     let errMsg = data.error || 'Verification failed';
                     // User-friendly error messages
                     const errorMap = {
-                        'invalid_format': '❌ Wrong format. Copy the EXACT IQ2::... line from AI',
+                        'invalid_format': '❌ Wrong format. Copy the EXACT IQ2RES::... line from AI',
                         'invalid_or_expired_nonce': '⏱️ Prompt expired. Refresh page and try again.',
                         'nonce_already_used': '🔒 Already verified. One attempt only!',
                         'nonce_expired': '⏱️ Time ran out. Refresh page and try again.',
