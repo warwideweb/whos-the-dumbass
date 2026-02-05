@@ -989,6 +989,12 @@
             z-index: 1000;
             overflow: hidden;
         }
+
+        /* High IQ Glow Animation */
+        @keyframes glowPulse {
+            0%, 100% { box-shadow: 0 0 10px var(--neon-green), 0 0 20px var(--neon-green); }
+            50% { box-shadow: 0 0 20px var(--neon-green), 0 0 40px var(--neon-green), 0 0 60px var(--neon-green); }
+        }
     </style>
 </head>
 <body>
@@ -1090,9 +1096,19 @@
             </div>
 
             <div class="already-tested" id="alreadyTested" style="display: none;">
-                <h3>🚫 NICE TRY, DUMBASS</h3>
-                <p>You already took the test. One brain, one chance. Your score is locked forever.</p>
+                <h3 id="resultTitle">🚫 NICE TRY, DUMBASS</h3>
+                <p id="resultMessage">You already took the test. One brain, one chance. Your score is locked forever.</p>
                 <p style="margin-top: 15px; color: var(--neon-yellow);">Your Score: <strong id="lockedScore">—</strong></p>
+                
+                <!-- High IQ URL Input (140+) -->
+                <div id="highIQUrlSection" style="display: none; margin-top: 20px;">
+                    <p style="color: var(--neon-green); font-weight: 600;">🏆 GENIUS DETECTED! Add your link to the leaderboard:</p>
+                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+                        <input type="url" id="userUrlInput" placeholder="https://twitter.com/yourhandle" 
+                            style="flex: 1; padding: 12px 15px; background: var(--bg-primary); border: 2px solid var(--neon-green); border-radius: 8px; color: var(--text-primary); font-size: 0.9rem; animation: glowPulse 2s infinite;">
+                        <button onclick="saveUserUrl()" style="padding: 12px 20px; background: var(--neon-green); color: #000; border: none; border-radius: 8px; font-weight: 700; cursor: pointer;">Save</button>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -1464,10 +1480,10 @@
             localStorage.setItem('wtd_timestamp', Date.now().toString());
             if (sealedToken) localStorage.setItem('wtd_sealed_token', sealedToken);
             
-            processResult(iq, username);
+            processResult(iq, username, iq >= 140);
         }
 
-        function processResult(iq, username = 'Anonymous') {
+        function processResult(iq, username = 'Anonymous', highIQ = false) {
             // Update display
             updateIQDisplay(iq);
             
@@ -1479,15 +1495,57 @@
             document.getElementById('alreadyTested').style.display = 'block';
             document.getElementById('lockedScore').textContent = iq;
             
-            // Celebration or shame
-            if (iq >= 130) {
+            // Update result message based on IQ
+            const titleEl = document.getElementById('resultTitle');
+            const msgEl = document.getElementById('resultMessage');
+            
+            if (iq >= 140) {
+                titleEl.textContent = '🧠 CERTIFIED GENIUS!';
+                titleEl.style.color = 'var(--neon-green)';
+                msgEl.textContent = 'Wow. You\'re actually smart. Add your link to flex on the leaderboard.';
+                // Show glowing URL input
+                document.getElementById('highIQUrlSection').style.display = 'block';
+                showToast('🎉 GENIUS! IQ 140+! Add your link to the leaderboard!');
+                triggerConfetti();
+            } else if (iq >= 130) {
+                titleEl.textContent = '🎉 SMART!';
+                titleEl.style.color = 'var(--neon-green)';
+                msgEl.textContent = 'You\'re actually smart. Not quite genius, but close.';
                 showToast('🎉 GENIUS DETECTED! You\'re actually smart!');
                 triggerConfetti();
             } else if (iq >= 100) {
+                titleEl.textContent = '😐 AVERAGE';
+                titleEl.style.color = 'var(--neon-yellow)';
+                msgEl.textContent = 'You\'re... fine. Average. Mediocre. Nothing special.';
                 showToast('😐 You\'re... fine. Average. Mediocre.');
             } else {
+                titleEl.textContent = '💀 DUMBASS CONFIRMED';
+                titleEl.style.color = 'var(--neon-red)';
+                msgEl.textContent = 'Congratulations! You\'re officially the dumbass.';
                 showToast('💀 DUMBASS CONFIRMED! We have a winner!');
             }
+        }
+        
+        function saveUserUrl() {
+            const url = document.getElementById('userUrlInput').value.trim();
+            if (!url) {
+                showToast('❌ Enter a URL first');
+                return;
+            }
+            // Validate URL
+            try {
+                new URL(url);
+            } catch {
+                showToast('❌ Invalid URL');
+                return;
+            }
+            // Save to localStorage
+            localStorage.setItem('wtd_user_url', url);
+            showToast('✅ URL saved! It will show on the leaderboard.');
+            // Update leaderboard display
+            const username = localStorage.getItem('wtd_username') || 'Anonymous';
+            const iq = parseInt(localStorage.getItem('wtd_iq_score') || '0');
+            addToLeaderboard(username, iq, url);
         }
 
         function updateIQDisplay(iq) {
