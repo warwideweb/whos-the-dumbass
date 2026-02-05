@@ -1037,38 +1037,34 @@
                 <div class="step-indicator">
                     <div class="step active" id="step1">
                         <div class="step-number">1</div>
-                        <div class="step-text">Copy Prompt</div>
+                        <div class="step-text">Paste Transcript</div>
                     </div>
                     <div class="step" id="step2">
                         <div class="step-number">2</div>
-                        <div class="step-text">Paste to ChatGPT</div>
+                        <div class="step-text">Verify Human</div>
                     </div>
                     <div class="step" id="step3">
                         <div class="step-number">3</div>
-                        <div class="step-text">Submit Response</div>
+                        <div class="step-text">Get Results</div>
                     </div>
-                </div>
-
-                <div class="prompt-section">
-                    <div class="prompt-label">
-                        <span>📋 Copy this encoded prompt to ChatGPT:</span>
-                        <button class="copy-btn" id="copyPromptBtn" onclick="copyPrompt()">
-                            <span>📋</span> Copy Prompt
-                        </button>
-                    </div>
-                    <div class="prompt-box" id="promptBox"></div>
                 </div>
 
                 <div class="timer-container" id="timerContainer" style="display: none;">
-                    <div class="timer" id="timer">3:00</div>
-                    <div class="timer-label">⏱️ Time remaining — Think fast, dumbass!</div>
+                    <div class="timer" id="timer">2:00</div>
+                    <div class="timer-label">⏱️ Nonce expires — Submit before timeout!</div>
                 </div>
 
                 <div class="response-section">
                     <textarea 
                         class="response-input" 
                         id="responseInput" 
-                        placeholder="Paste the IQ2:: response from ChatGPT here..."
+                        placeholder="Paste your ChatGPT conversation transcript here...
+
+Example:
+User: What is quantum physics?
+Assistant: Quantum physics is a branch of physics...
+User: Can you explain it simpler?
+..."
                         oninput="handleResponseInput()"
                     ></textarea>
                 </div>
@@ -1228,7 +1224,7 @@
         // ===== CONFIGURATION =====
         const CONFIG = {
             // Cloudflare Worker API (HMAC-signed, tamper-proof)
-            apiBase: 'https://whosthedumbass-api.YOUR-SUBDOMAIN.workers.dev',
+            apiBase: 'https://whosthedumbass-api.warwideweb.workers.dev',
             turnstileSiteKey: 'YOUR_TURNSTILE_SITE_KEY',
             solPrice: 150, // USD per SOL (update as needed)
             boostRate: 1, // positions per $10 USD
@@ -1544,67 +1540,66 @@ TRANSCRIPT: [Your entire conversation history with this user]`;
 
         // ===== RESPONSE HANDLING =====
         function handleResponseInput() {
-            const response = document.getElementById('responseInput').value;
+            const transcript = document.getElementById('responseInput').value;
             const username = document.getElementById('usernameInput').value;
             
-            // Check if response looks valid
-            const isValidResponse = response.includes('IQ2::');
+            // Check if transcript is long enough (at least 50 chars)
+            const isValidTranscript = transcript.trim().length >= 50;
             const hasUsername = username.trim().length >= 2;
-            const hasTurnstile = !!turnstileToken;
+            // Turnstile is optional for now
+            const hasTurnstile = true; // !!turnstileToken;
             
-            document.getElementById('submitBtn').disabled = !(isValidResponse && hasUsername && hasTurnstile);
+            document.getElementById('submitBtn').disabled = !(isValidTranscript && hasUsername && hasTurnstile);
             
-            if (isValidResponse) {
-                document.getElementById('step2').classList.remove('active');
+            if (isValidTranscript) {
+                document.getElementById('step1').classList.remove('active');
+                document.getElementById('step1').classList.add('completed');
+                document.getElementById('step2').classList.add('active');
                 document.getElementById('step2').classList.add('completed');
                 document.getElementById('step3').classList.add('active');
             }
         }
         
         function validateSubmitButton() {
-            const response = document.getElementById('responseInput').value;
+            const transcript = document.getElementById('responseInput').value;
             const username = document.getElementById('usernameInput').value;
-            const isValidResponse = response.includes('IQ2::');
+            const isValidTranscript = transcript.trim().length >= 50;
             const hasUsername = username.trim().length >= 2;
-            const hasTurnstile = !!turnstileToken;
-            document.getElementById('submitBtn').disabled = !(isValidResponse && hasUsername && hasTurnstile);
+            // Turnstile optional for now
+            const hasTurnstile = true;
+            document.getElementById('submitBtn').disabled = !(isValidTranscript && hasUsername && hasTurnstile);
         }
 
         async function submitTest() {
             if (hasSubmitted) return;
             
-            // Check Turnstile
-            if (!turnstileToken) {
-                showToast('⚠️ Complete the verification first, dumbass.');
-                return;
-            }
+            // Check Turnstile (optional for now)
+            // if (!turnstileToken) {
+            //     showToast('⚠️ Complete the verification first, dumbass.');
+            //     return;
+            // }
             
             hasSubmitted = true;
             clearInterval(timerInterval);
             
-            const response = document.getElementById('responseInput').value.trim();
+            const transcript = document.getElementById('responseInput').value.trim();
             const username = document.getElementById('usernameInput').value.trim();
+            
+            if (!transcript || transcript.length < 50) {
+                showToast('⚠️ Paste a longer conversation transcript, dumbass.');
+                hasSubmitted = false;
+                return;
+            }
             
             // Show loading state
             const submitBtn = document.getElementById('submitBtn');
-            submitBtn.innerHTML = '<span>⏳</span> Verifying...';
+            submitBtn.innerHTML = '<span>⏳</span> AI Analyzing...';
             submitBtn.disabled = true;
             
             let iq = null;
             let sealedToken = null;
             
-            // Parse the response to extract profile_json
-            if (!response.startsWith('IQ2::')) {
-                showToast('⚠️ Invalid response format. Expected IQ2:: encoded data.');
-                iq = 70 + Math.floor(Math.random() * 20);
-                processResult(iq, username);
-                return;
-            }
-            
             try {
-                const base64 = response.substring(5);
-                const profile_json = atob(base64);
-                
                 // Get stored nonce/timestamp
                 const nonce = sessionStorage.getItem('wtd_nonce');
                 const timestamp = parseInt(sessionStorage.getItem('wtd_timestamp'));
@@ -1613,44 +1608,56 @@ TRANSCRIPT: [Your entire conversation history with this user]`;
                     throw new Error('No nonce found - session expired');
                 }
                 
-                // Send to secure backend for verification + HMAC signing
-                const verifyRes = await fetch(`${CONFIG.apiBase}/verify`, {
+                showToast('🧠 AI is analyzing your conversation...');
+                
+                // Send transcript to backend - it calls ChatGPT + signs
+                const analyzeRes = await fetch(`${CONFIG.apiBase}/analyze`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         nonce,
                         timestamp,
-                        transcript_hash: '',
-                        profile_json,
-                        turnstile_token: turnstileToken
+                        transcript,
+                        turnstile_token: turnstileToken || null
                     })
                 });
                 
-                const verifyData = await verifyRes.json();
+                const analyzeData = await analyzeRes.json();
                 
-                if (verifyData.ok) {
-                    // Success! Server verified and signed
-                    iq = verifyData.iq;
-                    sealedToken = verifyData.token;
+                if (analyzeData.ok) {
+                    // Success! Server analyzed, validated, and signed
+                    sealedToken = analyzeData.token;
+                    const profile = analyzeData.profile?.profile || analyzeData.profile;
                     
-                    console.log('✅ Server verified!');
-                    console.log('IQ:', iq);
-                    console.log('Tier:', verifyData.tier);
-                    console.log('Roast:', verifyData.roast);
-                    
-                    showToast(verifyData.roast || '🧠 IQ calculated!');
-                } else {
-                    // Verification failed
-                    console.error('Verification failed:', verifyData.error);
-                    
-                    if (verifyData.error === 'check_digit_mismatch') {
-                        showToast('🚨 TAMPER DETECTED! Nice try, dumbass.');
-                    } else if (verifyData.error === 'nonce_expired') {
-                        showToast('⏰ Time expired! Too slow, dumbass.');
-                    } else if (verifyData.error === 'bot_suspected') {
-                        showToast('🤖 Bot detected! Are you even human?');
+                    // Calculate IQ from profile scores
+                    if (profile) {
+                        const scoreValues = Object.values(profile).filter(v => typeof v === 'number');
+                        const avgScore = scoreValues.reduce((a, b) => a + b, 0) / scoreValues.length;
+                        iq = Math.round(70 + (avgScore * 0.9));
+                        iq = Math.min(160, Math.max(70, iq));
                     } else {
-                        showToast(`⚠️ Verification failed: ${verifyData.error}`);
+                        iq = 100;
+                    }
+                    
+                    console.log('✅ Analysis complete!');
+                    console.log('IQ:', iq);
+                    console.log('Token:', sealedToken);
+                    
+                    showToast('🧠 Analysis complete!');
+                } else {
+                    // Analysis failed
+                    console.error('Analysis failed:', analyzeData.error);
+                    
+                    if (analyzeData.error === 'nonce_expired') {
+                        showToast('⏰ Time expired! Refresh and try again.');
+                    } else if (analyzeData.error === 'nonce_invalid') {
+                        showToast('⚠️ Session expired. Refresh the page.');
+                    } else if (analyzeData.error === 'bot_suspected') {
+                        showToast('🤖 Bot detected! Are you even human?');
+                    } else if (analyzeData.error === 'llm_api_error') {
+                        showToast('⚠️ AI is busy. Try again in a moment.');
+                    } else {
+                        showToast(`⚠️ Error: ${analyzeData.error}`);
                     }
                     
                     iq = 70 + Math.floor(Math.random() * 15);
@@ -1658,26 +1665,8 @@ TRANSCRIPT: [Your entire conversation history with this user]`;
                 
             } catch (e) {
                 console.error('Submit error:', e);
-                
-                // Fallback to local validation if API fails
-                showToast('⚠️ Server error. Using local validation (less secure).');
-                
-                try {
-                    const base64 = response.substring(5);
-                    const data = JSON.parse(atob(base64));
-                    const scores = data.profile || data.scores;
-                    
-                    if (scores) {
-                        const scoreValues = Object.values(scores).map(v => parseFloat(v));
-                        const avgScore = scoreValues.reduce((a, b) => a + b, 0) / scoreValues.length;
-                        iq = Math.round(70 + (avgScore * 0.9));
-                        iq = Math.min(160, Math.max(70, iq));
-                    } else {
-                        iq = 70 + Math.floor(Math.random() * 20);
-                    }
-                } catch {
-                    iq = 70 + Math.floor(Math.random() * 20);
-                }
+                showToast('⚠️ Network error. Check your connection.');
+                iq = 70 + Math.floor(Math.random() * 20);
             }
             
             // Save to localStorage
