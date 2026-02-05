@@ -298,6 +298,21 @@
             color: var(--bg-primary);
         }
 
+        .step.copy-step {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .step.copy-step:hover {
+            transform: translateY(-2px);
+            border-color: var(--neon-green);
+            box-shadow: 0 5px 20px rgba(0, 255, 136, 0.3);
+        }
+
+        .step.copy-step:active {
+            transform: translateY(0);
+        }
+
         .step-text {
             font-size: 0.9rem;
             color: var(--text-secondary);
@@ -1041,9 +1056,9 @@
                 <h2>🎯 Take The Test</h2>
                 
                 <div class="step-indicator">
-                    <div class="step active" id="step1">
+                    <div class="step active copy-step" id="step1" onclick="copyPrompt()">
                         <div class="step-number">1</div>
-                        <div class="step-text">Copy</div>
+                        <div class="step-text" id="step1Text">Copy the prompt</div>
                     </div>
                     <div class="step" id="step2">
                         <div class="step-number">2</div>
@@ -1053,13 +1068,6 @@
                         <div class="step-number">3</div>
                         <div class="step-text">Get Score</div>
                     </div>
-                </div>
-
-                <!-- Step 1: Just COPY button -->
-                <div id="step1Section">
-                    <button class="submit-btn" id="copyBtn" onclick="copyPrompt()" style="background: linear-gradient(135deg, var(--neon-green), var(--neon-blue));">
-                        <span>📋</span> COPY
-                    </button>
                 </div>
                 
                 <!-- Step 2 & 3: After prompt copied -->
@@ -1115,7 +1123,7 @@
                 <div id="highIQUrlSection" style="display: none; margin-top: 20px;">
                     <p style="color: var(--neon-green); font-weight: 600;">🏆 GENIUS DETECTED! Add your link to the leaderboard:</p>
                     <div style="display: flex; gap: 10px; margin-top: 10px;">
-                        <input type="url" id="userUrlInput" placeholder="https://twitter.com/yourhandle" 
+                        <input type="text" id="userUrlInput" placeholder="twitter.com/yourhandle or any URL" 
                             style="flex: 1; padding: 12px 15px; background: var(--bg-primary); border: 2px solid var(--neon-green); border-radius: 8px; color: var(--text-primary); font-size: 0.9rem; animation: glowPulse 2s infinite;">
                         <button onclick="saveUserUrl()" style="padding: 12px 20px; background: var(--neon-green); color: #000; border: none; border-radius: 8px; font-weight: 700; cursor: pointer;">Save</button>
                     </div>
@@ -1324,9 +1332,13 @@
         let challengeTimer = null;
 
         async function copyPrompt() {
-            const copyBtn = document.getElementById('copyBtn');
-            copyBtn.disabled = true;
-            copyBtn.innerHTML = '<span>⏳</span> ...';
+            const step1 = document.getElementById('step1');
+            const step1Text = document.getElementById('step1Text');
+            
+            // Prevent double-click
+            if (step1.classList.contains('completed')) return;
+            
+            step1Text.textContent = '...';
             
             try {
                 // Get prompt from server
@@ -1341,16 +1353,16 @@
                 // Copy the prompt
                 await navigator.clipboard.writeText(data.prompt);
                 
-                copyBtn.innerHTML = '<span>✅</span> COPIED!';
+                step1Text.textContent = '✓ Copied!';
                 showToast('✅ Copied! Now paste into ChatGPT with your conversation.');
                 
                 // Show step 2
-                document.getElementById('step1Section').style.display = 'none';
                 document.getElementById('step2Section').style.display = 'block';
                 
                 // Update steps
-                document.getElementById('step1').classList.add('completed');
-                document.getElementById('step1').classList.remove('active');
+                step1.classList.add('completed');
+                step1.classList.remove('active');
+                step1.classList.remove('copy-step');
                 document.getElementById('step2').classList.add('active');
                 
                 // Start timer
@@ -1358,8 +1370,7 @@
                 
             } catch (e) {
                 showToast(`❌ ${e.message}`);
-                copyBtn.disabled = false;
-                copyBtn.innerHTML = '<span>📋</span> COPY';
+                step1Text.textContent = 'Copy the prompt';
             }
         }
 
@@ -1414,19 +1425,6 @@
         }
 
         // ===== RESPONSE HANDLING =====
-        function handleConversationInput() {
-            const conversation = document.getElementById('conversationInput').value;
-            const hasContent = conversation.trim().length >= 100;
-            
-            if (hasContent) {
-                document.getElementById('step1').classList.add('completed');
-                document.getElementById('step1').classList.remove('active');
-                document.getElementById('step2').classList.add('active');
-            }
-            
-            validateSubmitButton();
-        }
-        
         function validateSubmitButton() {
             const username = document.getElementById('usernameInput').value.trim();
             const hasUsername = username.length >= 2;
@@ -1574,16 +1572,20 @@
         }
         
         function saveUserUrl() {
-            const url = document.getElementById('userUrlInput').value.trim();
+            let url = document.getElementById('userUrlInput').value.trim();
             if (!url) {
                 showToast('❌ Enter a URL first');
                 return;
+            }
+            // Add https:// if missing
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                url = 'https://' + url;
             }
             // Validate URL
             try {
                 new URL(url);
             } catch {
-                showToast('❌ Invalid URL');
+                showToast('❌ Invalid URL format');
                 return;
             }
             // Save to localStorage
@@ -1614,16 +1616,16 @@
             document.getElementById('highIQUrlSection').style.display = 'none';
             
             // Reset button states
-            document.getElementById('copyBtn').disabled = false;
-            document.getElementById('copyBtn').innerHTML = '<span>📋</span> COPY PROMPT';
+            document.getElementById('step1Text').textContent = 'Copy the prompt';
             document.getElementById('submitBtn').disabled = true;
             document.getElementById('submitBtn').innerHTML = '<span>🚀</span> GO / VERIFY';
-            document.getElementById('conversationInput').value = '';
+            document.getElementById('responseInput').value = '';
             document.getElementById('usernameInput').value = '';
             document.getElementById('timerDisplay').style.display = 'none';
+            document.getElementById('step2Section').style.display = 'none';
             
             // Reset steps
-            document.getElementById('step1').classList.add('active');
+            document.getElementById('step1').classList.add('active', 'copy-step');
             document.getElementById('step1').classList.remove('completed');
             document.getElementById('step2').classList.remove('active', 'completed');
             document.getElementById('step3').classList.remove('active', 'completed');
