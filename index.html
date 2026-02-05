@@ -1109,6 +1109,11 @@
                         <button onclick="saveUserUrl()" style="padding: 12px 20px; background: var(--neon-green); color: #000; border: none; border-radius: 8px; font-weight: 700; cursor: pointer;">Save</button>
                     </div>
                 </div>
+                
+                <!-- Reset Button (for testing) -->
+                <button onclick="resetTest()" style="margin-top: 20px; padding: 10px 20px; background: transparent; border: 1px solid var(--text-muted); color: var(--text-muted); border-radius: 8px; cursor: pointer; font-size: 0.8rem;">
+                    🔄 Reset (Take Test Again)
+                </button>
             </div>
         </section>
 
@@ -1546,6 +1551,42 @@
             const username = localStorage.getItem('wtd_username') || 'Anonymous';
             const iq = parseInt(localStorage.getItem('wtd_iq_score') || '0');
             addToLeaderboard(username, iq, url);
+        }
+        
+        function resetTest() {
+            // Clear all localStorage items
+            localStorage.removeItem('wtd_iq_score');
+            localStorage.removeItem('wtd_username');
+            localStorage.removeItem('wtd_timestamp');
+            localStorage.removeItem('wtd_sealed_token');
+            localStorage.removeItem('wtd_user_url');
+            
+            // Reset state
+            hasSubmitted = false;
+            currentNonce = null;
+            currentPrompt = null;
+            
+            // Show test section, hide results
+            document.getElementById('testSection').style.display = 'block';
+            document.getElementById('alreadyTested').style.display = 'none';
+            document.getElementById('highIQUrlSection').style.display = 'none';
+            
+            // Reset button states
+            document.getElementById('copyBtn').disabled = false;
+            document.getElementById('copyBtn').innerHTML = '<span>📋</span> COPY PROMPT';
+            document.getElementById('submitBtn').disabled = true;
+            document.getElementById('submitBtn').innerHTML = '<span>🚀</span> GO / VERIFY';
+            document.getElementById('conversationInput').value = '';
+            document.getElementById('usernameInput').value = '';
+            document.getElementById('timerDisplay').style.display = 'none';
+            
+            // Reset steps
+            document.getElementById('step1').classList.add('active');
+            document.getElementById('step1').classList.remove('completed');
+            document.getElementById('step2').classList.remove('active', 'completed');
+            document.getElementById('step3').classList.remove('active', 'completed');
+            
+            showToast('🔄 Reset! You can take the test again.');
         }
 
         function updateIQDisplay(iq) {
