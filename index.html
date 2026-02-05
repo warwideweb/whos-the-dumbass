@@ -3,1732 +3,454 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WhosTheDumbass.com — The Global IQ Leaderboard</title>
-    <meta name="description" content="Find out if you're the dumbass. AI-powered IQ test. Get ranked. Get roasted.">
-    <meta property="og:title" content="WhosTheDumbass.com — Are You The Dumbass?">
-    <meta property="og:description" content="AI-powered IQ test. Global leaderboard. No mercy.">
-    <meta property="og:image" content="https://whosthedumbass.com/og-image.png">
+    <title>Who's The Dumbass?</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-    <!-- Cloudflare Turnstile -->
-    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
         :root {
-            --bg-primary: #0a0a0f;
-            --bg-secondary: #12121a;
-            --bg-card: #1a1a24;
-            --neon-green: #00ff88;
-            --neon-pink: #ff0080;
-            --neon-purple: #8b5cf6;
-            --neon-blue: #00d4ff;
-            --neon-yellow: #ffd000;
-            --neon-red: #ff3366;
-            --text-primary: #ffffff;
-            --text-secondary: #a0a0b0;
-            --text-muted: #606070;
-            --border-color: #2a2a3a;
+            --bg: #0a0a0f;
+            --card: #12121a;
+            --border: #2a2a3a;
+            --green: #00ff88;
+            --pink: #ff0080;
+            --text: #ffffff;
+            --muted: #666;
         }
-
+        
         body {
             font-family: 'Space Grotesk', sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
+            background: var(--bg);
+            color: var(--text);
             min-height: 100vh;
-            overflow-x: hidden;
-        }
-
-        /* Animated background */
-        .bg-grid {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: 
-                linear-gradient(rgba(0, 255, 136, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 255, 136, 0.03) 1px, transparent 1px);
-            background-size: 50px 50px;
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-            position: relative;
-            z-index: 1;
-        }
-
-        /* Header */
-        header {
-            padding: 20px 0;
-            border-bottom: 1px solid var(--border-color);
-            backdrop-filter: blur(10px);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            background: rgba(10, 10, 15, 0.9);
-        }
-
-        .header-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .logo {
-            font-size: 1.4rem;
-            font-weight: 700;
             display: flex;
             align-items: center;
-            gap: 8px;
-        }
-
-        .logo-icon {
-            font-size: 1.8rem;
-        }
-
-        .logo span {
-            background: linear-gradient(135deg, var(--neon-green), var(--neon-blue));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .header-stats {
-            display: flex;
-            gap: 24px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.85rem;
-        }
-
-        .stat {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .stat-value {
-            color: var(--neon-green);
-            font-weight: 600;
-        }
-
-        /* Hero Section */
-        .hero {
-            padding: 80px 0 60px;
-            text-align: center;
-        }
-
-        .hero-badge {
-            display: inline-block;
-            padding: 8px 16px;
-            background: rgba(255, 0, 128, 0.15);
-            border: 1px solid var(--neon-pink);
-            border-radius: 50px;
-            font-size: 0.85rem;
-            color: var(--neon-pink);
-            margin-bottom: 24px;
-            animation: pulse-border 2s infinite;
-        }
-
-        @keyframes pulse-border {
-            0%, 100% { box-shadow: 0 0 10px rgba(255, 0, 128, 0.3); }
-            50% { box-shadow: 0 0 25px rgba(255, 0, 128, 0.6); }
-        }
-
-        .hero h1 {
-            font-size: clamp(2.5rem, 6vw, 4.5rem);
-            font-weight: 700;
-            line-height: 1.1;
-            margin-bottom: 20px;
-        }
-
-        .hero h1 .highlight {
-            background: linear-gradient(135deg, var(--neon-pink), var(--neon-purple));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .hero-subtitle {
-            font-size: 1.2rem;
-            color: var(--text-secondary);
-            max-width: 600px;
-            margin: 0 auto 40px;
-        }
-
-        /* IQ Display */
-        .iq-display {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 20px;
-            padding: 40px;
-            max-width: 500px;
-            margin: 0 auto 40px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .iq-display::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, var(--neon-green), var(--neon-blue), var(--neon-purple), var(--neon-pink));
-        }
-
-        .iq-number {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: clamp(5rem, 15vw, 8rem);
-            font-weight: 700;
-            line-height: 1;
-            margin-bottom: 10px;
-        }
-
-        .iq-number.genius {
-            background: linear-gradient(135deg, var(--neon-green), var(--neon-blue));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            text-shadow: 0 0 60px rgba(0, 255, 136, 0.5);
-        }
-
-        .iq-number.average {
-            color: var(--neon-yellow);
-            text-shadow: 0 0 60px rgba(255, 208, 0, 0.5);
-        }
-
-        .iq-number.dumb {
-            color: var(--neon-red);
-            text-shadow: 0 0 60px rgba(255, 51, 102, 0.5);
-        }
-
-        .iq-number.pending {
-            color: var(--text-muted);
-        }
-
-        .iq-label {
-            font-size: 1.1rem;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 3px;
-        }
-
-        .iq-verdict {
-            margin-top: 15px;
-            font-size: 1.3rem;
-            font-weight: 600;
-        }
-
-        /* Test Section */
-        .test-section {
-            background: var(--bg-secondary);
-            border-radius: 20px;
-            padding: 40px;
-            margin-bottom: 60px;
-            border: 1px solid var(--border-color);
-        }
-
-        .test-section h2 {
-            font-size: 1.8rem;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .step-indicator {
-            display: flex;
             justify-content: center;
-            gap: 20px;
-            margin-bottom: 30px;
+            padding: 20px;
         }
-
+        
+        .container {
+            max-width: 500px;
+            width: 100%;
+        }
+        
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, var(--pink), var(--green));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: var(--muted);
+            margin-bottom: 40px;
+        }
+        
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 30px;
+        }
+        
         .step {
             display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 12px 20px;
-            background: var(--bg-card);
-            border-radius: 10px;
-            border: 1px solid var(--border-color);
-            transition: all 0.3s ease;
+            align-items: flex-start;
+            gap: 15px;
+            margin-bottom: 25px;
         }
-
-        .step.active {
-            border-color: var(--neon-green);
-            background: rgba(0, 255, 136, 0.1);
-        }
-
-        .step.completed {
-            border-color: var(--neon-green);
-            background: rgba(0, 255, 136, 0.2);
-        }
-
-        .step-number {
-            width: 28px;
-            height: 28px;
+        
+        .step-num {
+            width: 32px;
+            height: 32px;
+            background: var(--green);
+            color: #000;
             border-radius: 50%;
-            background: var(--bg-primary);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.85rem;
-            font-weight: 600;
-        }
-
-        .step.active .step-number {
-            background: var(--neon-green);
-            color: var(--bg-primary);
-        }
-
-        .step.completed .step-number {
-            background: var(--neon-green);
-            color: var(--bg-primary);
-        }
-
-        .step-text {
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-        }
-
-        .step.active .step-text {
-            color: var(--text-primary);
-        }
-
-        /* Prompt Box */
-        .prompt-section {
-            margin-bottom: 30px;
-        }
-
-        .prompt-label {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-        }
-
-        .prompt-label span {
-            font-weight: 500;
-            color: var(--text-secondary);
-        }
-
-        .copy-btn {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 8px 16px;
-            background: var(--neon-green);
-            color: var(--bg-primary);
-            border: none;
-            border-radius: 8px;
-            font-family: 'Space Grotesk', sans-serif;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .copy-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(0, 255, 136, 0.4);
-        }
-
-        .copy-btn.copied {
-            background: var(--neon-purple);
-        }
-
-        .prompt-box {
-            background: var(--bg-primary);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 20px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            word-break: break-all;
-            max-height: 100px;
-            overflow-y: auto;
-            line-height: 1.6;
-        }
-
-        /* Response Input */
-        .response-section {
-            margin-bottom: 30px;
-        }
-
-        .response-input {
-            width: 100%;
-            background: var(--bg-primary);
-            border: 2px solid var(--border-color);
-            border-radius: 12px;
-            padding: 20px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.9rem;
-            color: var(--text-primary);
-            resize: vertical;
-            min-height: 120px;
-            transition: border-color 0.3s ease;
-        }
-
-        .response-input:focus {
-            outline: none;
-            border-color: var(--neon-green);
-        }
-
-        .response-input::placeholder {
-            color: var(--text-muted);
-        }
-
-        /* Timer */
-        .timer-container {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .timer {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 3rem;
             font-weight: 700;
-            color: var(--neon-yellow);
-            text-shadow: 0 0 30px rgba(255, 208, 0, 0.5);
+            flex-shrink: 0;
         }
-
-        .timer.warning {
-            color: var(--neon-red);
-            animation: timer-pulse 0.5s infinite;
-        }
-
-        @keyframes timer-pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-
-        .timer-label {
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-            margin-top: 5px;
-        }
-
-        /* Username Input */
-        .username-section {
-            margin-bottom: 30px;
-        }
-
-        .username-input {
-            width: 100%;
-            max-width: 400px;
-            background: var(--bg-primary);
-            border: 2px solid var(--border-color);
-            border-radius: 12px;
-            padding: 16px 20px;
-            font-family: 'Space Grotesk', sans-serif;
-            font-size: 1rem;
-            color: var(--text-primary);
-            transition: border-color 0.3s ease;
-        }
-
-        .username-input:focus {
-            outline: none;
-            border-color: var(--neon-purple);
-        }
-
-        /* Submit Button */
-        .submit-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            padding: 18px 40px;
-            background: linear-gradient(135deg, var(--neon-pink), var(--neon-purple));
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-family: 'Space Grotesk', sans-serif;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .submit-btn:hover:not(:disabled) {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 40px rgba(255, 0, 128, 0.4);
-        }
-
-        .submit-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        /* Already Tested Message */
-        .already-tested {
-            text-align: center;
-            padding: 40px;
-            background: rgba(255, 51, 102, 0.1);
-            border: 1px solid var(--neon-red);
-            border-radius: 12px;
-        }
-
-        .already-tested h3 {
-            color: var(--neon-red);
-            font-size: 1.5rem;
-            margin-bottom: 10px;
-        }
-
-        .already-tested p {
-            color: var(--text-secondary);
-        }
-
-        /* Leaderboard */
-        .leaderboard-section {
-            margin-bottom: 60px;
-        }
-
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        .section-title {
-            font-size: 2rem;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .live-indicator {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 16px;
-            background: rgba(0, 255, 136, 0.1);
-            border: 1px solid var(--neon-green);
-            border-radius: 50px;
-            font-size: 0.85rem;
-            color: var(--neon-green);
-        }
-
-        .live-dot {
-            width: 8px;
-            height: 8px;
-            background: var(--neon-green);
-            border-radius: 50%;
-            animation: live-pulse 1.5s infinite;
-        }
-
-        @keyframes live-pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.5; transform: scale(1.2); }
-        }
-
-        /* Leaderboard Table */
-        .leaderboard {
-            background: var(--bg-secondary);
-            border-radius: 20px;
-            overflow: hidden;
-            border: 1px solid var(--border-color);
-        }
-
-        .leaderboard-header {
-            display: grid;
-            grid-template-columns: 80px 1fr 120px 200px 150px;
-            padding: 20px 25px;
-            background: var(--bg-card);
-            font-weight: 600;
-            color: var(--text-secondary);
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .leaderboard-body {
-            max-height: 600px;
-            overflow-y: auto;
-        }
-
-        .leaderboard-row {
-            display: grid;
-            grid-template-columns: 80px 1fr 120px 200px 150px;
-            padding: 18px 25px;
-            align-items: center;
-            border-bottom: 1px solid var(--border-color);
-            transition: background 0.2s ease;
-        }
-
-        .leaderboard-row:hover {
-            background: rgba(255, 255, 255, 0.02);
-        }
-
-        .leaderboard-row:last-child {
-            border-bottom: none;
-        }
-
-        .rank {
-            font-family: 'JetBrains Mono', monospace;
-            font-weight: 700;
-            font-size: 1.1rem;
-        }
-
-        .rank.gold { color: #ffd700; }
-        .rank.silver { color: #c0c0c0; }
-        .rank.bronze { color: #cd7f32; }
-
-        .rank-medal {
-            font-size: 1.4rem;
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .username {
-            font-weight: 600;
-            font-size: 1rem;
-        }
-
-        .badge {
-            padding: 4px 10px;
-            border-radius: 6px;
-            font-size: 0.7rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .badge.stupid {
-            background: linear-gradient(135deg, #ff3366, #ff6b6b);
-            color: white;
-            animation: badge-glow-red 2s infinite;
-        }
-
-        .badge.dumb {
-            background: linear-gradient(135deg, #ff8c00, #ffd700);
-            color: #1a1a24;
-            animation: badge-glow-yellow 2s infinite;
-        }
-
-        @keyframes badge-glow-red {
-            0%, 100% { box-shadow: 0 0 10px rgba(255, 51, 102, 0.5); }
-            50% { box-shadow: 0 0 20px rgba(255, 51, 102, 0.8); }
-        }
-
-        @keyframes badge-glow-yellow {
-            0%, 100% { box-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
-            50% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.8); }
-        }
-
-        .iq-score {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 1.2rem;
-            font-weight: 700;
-        }
-
-        .iq-score.high { color: var(--neon-green); }
-        .iq-score.medium { color: var(--neon-yellow); }
-        .iq-score.low { color: var(--neon-red); }
-
-        .user-links a {
-            color: var(--neon-blue);
-            text-decoration: none;
-            font-size: 0.85rem;
-            margin-right: 10px;
-            transition: color 0.2s ease;
-        }
-
-        .user-links a:hover {
-            color: var(--neon-green);
-        }
-
-        .too-stupid {
-            color: var(--neon-red);
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .boost-amount {
-            font-family: 'JetBrains Mono', monospace;
-            color: var(--neon-purple);
-            font-size: 0.9rem;
-        }
-
-        /* Payment Section */
-        .payment-section {
-            background: var(--bg-secondary);
-            border-radius: 20px;
-            padding: 40px;
-            margin-bottom: 60px;
-            border: 1px solid var(--border-color);
-        }
-
-        .payment-section h2 {
-            font-size: 1.8rem;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .payment-subtitle {
-            color: var(--text-secondary);
-            margin-bottom: 30px;
-        }
-
-        .payment-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
-        }
-
-        .payment-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 25px;
-        }
-
-        .payment-card h3 {
-            font-size: 1.1rem;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .wallet-display {
-            background: var(--bg-primary);
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 15px;
-        }
-
-        .wallet-label {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 8px;
-        }
-
-        .wallet-address {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.85rem;
-            color: var(--neon-green);
-            word-break: break-all;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .copy-icon {
-            cursor: pointer;
-            padding: 5px;
-            border-radius: 5px;
-            transition: background 0.2s ease;
-        }
-
-        .copy-icon:hover {
-            background: var(--bg-card);
-        }
-
-        .amount-input-group {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        .amount-input {
+        
+        .step-content {
             flex: 1;
-            background: var(--bg-primary);
-            border: 2px solid var(--border-color);
-            border-radius: 10px;
-            padding: 12px 15px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 1rem;
-            color: var(--text-primary);
         }
-
-        .amount-input:focus {
-            outline: none;
-            border-color: var(--neon-purple);
-        }
-
-        .currency-badge {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-            padding: 12px 20px;
+        
+        .step-title {
             font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .boost-preview {
-            background: rgba(139, 92, 246, 0.1);
-            border: 1px solid var(--neon-purple);
-            border-radius: 10px;
-            padding: 15px;
-            text-align: center;
-        }
-
-        .boost-preview-label {
-            font-size: 0.85rem;
-            color: var(--text-secondary);
             margin-bottom: 5px;
         }
-
-        .boost-preview-value {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--neon-purple);
-        }
-
-        /* Badge Purchase */
-        .badge-purchase {
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid var(--border-color);
-        }
-
-        .badge-option {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px;
-            background: var(--bg-primary);
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-            margin-bottom: 10px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .badge-option:hover {
-            border-color: var(--neon-pink);
-            background: rgba(255, 0, 128, 0.05);
-        }
-
-        .badge-option-info {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .badge-option-price {
-            font-family: 'JetBrains Mono', monospace;
-            color: var(--neon-green);
-            font-weight: 600;
-        }
-
-        /* Footer */
-        footer {
-            padding: 40px 0;
-            border-top: 1px solid var(--border-color);
-            text-align: center;
-        }
-
-        .footer-text {
-            color: var(--text-muted);
+        
+        .step-desc {
+            color: var(--muted);
             font-size: 0.9rem;
-            margin-bottom: 15px;
         }
-
-        .footer-links {
-            display: flex;
-            justify-content: center;
-            gap: 30px;
-        }
-
-        .footer-links a {
-            color: var(--text-secondary);
-            text-decoration: none;
-            font-size: 0.9rem;
-            transition: color 0.2s ease;
-        }
-
-        .footer-links a:hover {
-            color: var(--neon-green);
-        }
-
-        .disclaimer {
-            margin-top: 30px;
-            padding: 20px;
-            background: rgba(255, 51, 102, 0.1);
-            border: 1px solid rgba(255, 51, 102, 0.3);
-            border-radius: 10px;
-            font-size: 0.8rem;
-            color: var(--text-muted);
-        }
-
-        /* Mobile Responsive */
-        @media (max-width: 900px) {
-            .leaderboard-header,
-            .leaderboard-row {
-                grid-template-columns: 60px 1fr 80px;
-            }
-
-            .leaderboard-header .links-col,
-            .leaderboard-header .boost-col,
-            .leaderboard-row .user-links,
-            .leaderboard-row .boost-amount {
-                display: none;
-            }
-
-            .header-stats {
-                display: none;
-            }
-
-            .step-indicator {
-                flex-direction: column;
-                align-items: center;
-            }
-
-            .step {
-                width: 100%;
-                max-width: 300px;
-            }
-        }
-
-        @media (max-width: 600px) {
-            .hero h1 {
-                font-size: 2rem;
-            }
-
-            .iq-display {
-                padding: 25px;
-            }
-
-            .iq-number {
-                font-size: 4rem;
-            }
-
-            .test-section,
-            .payment-section {
-                padding: 25px;
-            }
-
-            .section-header {
-                flex-direction: column;
-                text-align: center;
-            }
-
-            .leaderboard-header,
-            .leaderboard-row {
-                padding: 15px;
-            }
-        }
-
-        /* Scrollbar Styling */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: var(--bg-primary);
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: var(--border-color);
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--text-muted);
-        }
-
-        /* Toast Notification */
-        .toast {
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%) translateY(100px);
-            background: var(--bg-card);
-            border: 1px solid var(--neon-green);
-            padding: 15px 30px;
-            border-radius: 12px;
-            font-weight: 500;
-            z-index: 1000;
-            transition: transform 0.3s ease;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-        }
-
-        .toast.show {
-            transform: translateX(-50%) translateY(0);
-        }
-
-        /* Confetti */
-        .confetti {
-            position: fixed;
-            top: 0;
-            left: 0;
+        
+        .btn {
             width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 1000;
-            overflow: hidden;
+            padding: 16px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        
+        .btn-green {
+            background: var(--green);
+            color: #000;
+        }
+        
+        .btn-green:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 255, 136, 0.3);
+        }
+        
+        .btn-pink {
+            background: var(--pink);
+            color: #fff;
+        }
+        
+        .btn-pink:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(255, 0, 128, 0.3);
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 150px;
+            background: var(--bg);
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            padding: 15px;
+            color: var(--text);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            resize: vertical;
+            margin: 15px 0;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: var(--green);
+        }
+        
+        textarea::placeholder {
+            color: var(--muted);
+        }
+        
+        #status {
+            text-align: center;
+            margin: 15px 0;
+            font-size: 0.95rem;
+            min-height: 24px;
+        }
+        
+        .status-error { color: var(--pink); }
+        .status-success { color: var(--green); }
+        
+        .timer {
+            text-align: center;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.5rem;
+            color: var(--green);
+            margin: 10px 0;
+        }
+        
+        /* Result */
+        .result {
+            display: none;
+            text-align: center;
+            margin-top: 30px;
+        }
+        
+        .result.show { display: block; }
+        
+        .iq-score {
+            font-size: 5rem;
+            font-weight: 700;
+            line-height: 1;
+        }
+        
+        .iq-score.genius { color: var(--green); }
+        .iq-score.average { color: #ffd000; }
+        .iq-score.dumb { color: var(--pink); }
+        
+        .verdict {
+            font-size: 1.5rem;
+            margin: 10px 0 20px;
+        }
+        
+        .token-box {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        
+        .token-label {
+            font-size: 0.8rem;
+            color: var(--muted);
+            margin-bottom: 8px;
+        }
+        
+        .token-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            word-break: break-all;
+            color: var(--green);
+            max-height: 60px;
+            overflow: auto;
+        }
+        
+        .btn-copy-token {
+            margin-top: 10px;
+            padding: 10px 20px;
+            font-size: 0.9rem;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: var(--muted);
+            font-size: 0.8rem;
         }
     </style>
 </head>
 <body>
-    <div class="bg-grid"></div>
-    
-    <header>
-        <div class="container">
-            <div class="header-content">
-                <div class="logo">
-                    <span class="logo-icon">🧠</span>
-                    <span>WhosTheDumbass</span>
-                </div>
-                <div class="header-stats">
-                    <div class="stat">
-                        <span>Tests Today:</span>
-                        <span class="stat-value" id="testsToday">2,847</span>
-                    </div>
-                    <div class="stat">
-                        <span>Avg IQ:</span>
-                        <span class="stat-value" id="avgIq">97.3</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </header>
-
-    <main>
-        <section class="hero">
-            <div class="container">
-                <div class="hero-badge">⚠️ ONE ATTEMPT PER LIFETIME — NO RETAKES</div>
-                <h1>Find Out Who's<br><span class="highlight">The Dumbass</span></h1>
-                <p class="hero-subtitle">AI-powered IQ assessment. Permanent ranking. No mercy. Are you smart enough to show your links, or too stupid to be seen?</p>
-                
-                <div class="iq-display" id="iqDisplay">
-                    <div class="iq-number pending" id="iqNumber">???</div>
-                    <div class="iq-label">YOUR IQ SCORE</div>
-                    <div class="iq-verdict" id="iqVerdict">Take the test to find out...</div>
-                </div>
-            </div>
-        </section>
-
-        <section class="container">
-            <div class="test-section" id="testSection">
-                <h2>🎯 Take The Test</h2>
-                
-                <div class="step-indicator">
-                    <div class="step active" id="step1">
-                        <div class="step-number">1</div>
-                        <div class="step-text">Paste Conversation</div>
-                    </div>
-                    <div class="step" id="step2">
-                        <div class="step-number">2</div>
-                        <div class="step-text">AI Analysis</div>
-                    </div>
-                    <div class="step" id="step3">
-                        <div class="step-number">3</div>
-                        <div class="step-text">Get Score</div>
-                    </div>
-                </div>
-
-                <!-- Paste your conversation -->
-                <div class="response-section" style="position: relative;">
-                    <textarea 
-                        class="response-input" 
-                        id="conversationInput" 
-                        placeholder="Paste your AI conversation here...
-
-Copy your entire chat history with ChatGPT, Grok, Claude, etc.
-We'll analyze it and give you your IQ score.
-
-Example:
-User: What is quantum physics?
-Assistant: Quantum physics is..."
-                        oninput="handleConversationInput()"
-                    ></textarea>
-                    <button onclick="pasteFromClipboard()" style="position: absolute; top: 10px; right: 10px; padding: 8px 16px; background: var(--neon-green); color: #000; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.85rem; z-index: 10;">📋 Paste</button>
-                </div>
-                
-                <p style="text-align: center; color: var(--text-muted); font-size: 0.8rem; margin-top: 10px; width: 100%;">
-                    🔒 Your conversation is analyzed securely. The scoring algorithm is hidden.
-                </p>
-
-                <!-- SHARED: Username + Submit -->
-                <div class="username-section">
-                    <input 
-                        type="text" 
-                        class="username-input" 
-                        id="usernameInput" 
-                        placeholder="Enter your username for the leaderboard"
-                        maxlength="20"
-                    >
-                </div>
-
-                <button class="submit-btn" id="submitBtn" onclick="submitTest()" disabled>
-                    <span>🧠</span> Reveal My IQ
-                </button>
-            </div>
-
-            <div class="already-tested" id="alreadyTested" style="display: none;">
-                <h3>🚫 NICE TRY, DUMBASS</h3>
-                <p>You already took the test. One brain, one chance. Your score is locked forever.</p>
-                <p style="margin-top: 15px; color: var(--neon-yellow);">Your Score: <strong id="lockedScore">—</strong></p>
-                
-                <!-- DNA Token for proof -->
-                <div id="tokenSection" style="margin-top: 20px; display: none;">
-                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">📜 Your proof token (share to verify your score):</p>
-                    <div style="position: relative;">
-                        <textarea id="dnaTokenDisplay" readonly style="width: 100%; height: 60px; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px; padding-right: 70px; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--neon-green); resize: none; word-break: break-all;"></textarea>
-                        <button onclick="copyDnaToken()" class="copy-btn" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%);">📋 Copy</button>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Leaderboard -->
-        <section class="leaderboard-section">
-            <div class="container">
-                <div class="section-header">
-                    <h2 class="section-title">
-                        <span>🏆</span> Global IQ Leaderboard
-                    </h2>
-                    <div class="live-indicator">
-                        <div class="live-dot"></div>
-                        <span>LIVE</span>
-                    </div>
-                </div>
-
-                <div class="leaderboard">
-                    <div class="leaderboard-header">
-                        <div>Rank</div>
-                        <div>User</div>
-                        <div>IQ</div>
-                        <div class="links-col">Links</div>
-                        <div class="boost-col">Boost</div>
-                    </div>
-                    <div class="leaderboard-body" id="leaderboardBody">
-                        <!-- Populated by JS -->
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Payment Section -->
-        <section class="container">
-            <div class="payment-section">
-                <h2>💎 Boost Your Ranking</h2>
-                <p class="payment-subtitle">Can't be smart? Be rich. Pay to climb the leaderboard and flex on the actual geniuses.</p>
-                
-                <div class="payment-grid">
-                    <div class="payment-card">
-                        <h3>☀️ Pay with SOL</h3>
-                        <div class="wallet-display">
-                            <div class="wallet-label">Wallet Address</div>
-                            <div class="wallet-address">
-                                <span id="solWallet">DUMBa55Y0uR50LwaLL3tADDR355H3R3</span>
-                                <span class="copy-icon" onclick="copyWallet('sol')">📋</span>
-                            </div>
-                        </div>
-                        <div class="amount-input-group">
-                            <input type="number" class="amount-input" id="solAmount" placeholder="0.00" step="0.01" oninput="updateBoostPreview('sol')">
-                            <div class="currency-badge">
-                                <span>◎</span> SOL
-                            </div>
-                        </div>
-                        <div class="boost-preview">
-                            <div class="boost-preview-label">Ranking Boost</div>
-                            <div class="boost-preview-value" id="solBoost">+0 positions</div>
-                        </div>
-                    </div>
-
-                    <div class="payment-card">
-                        <h3>💵 Pay with USDC</h3>
-                        <div class="wallet-display">
-                            <div class="wallet-label">Wallet Address</div>
-                            <div class="wallet-address">
-                                <span id="usdcWallet">DUMBa55Y0uR50LwaLL3tADDR355H3R3</span>
-                                <span class="copy-icon" onclick="copyWallet('usdc')">📋</span>
-                            </div>
-                        </div>
-                        <div class="amount-input-group">
-                            <input type="number" class="amount-input" id="usdcAmount" placeholder="0.00" step="1" oninput="updateBoostPreview('usdc')">
-                            <div class="currency-badge">
-                                <span>$</span> USDC
-                            </div>
-                        </div>
-                        <div class="boost-preview">
-                            <div class="boost-preview-label">Ranking Boost</div>
-                            <div class="boost-preview-value" id="usdcBoost">+0 positions</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="badge-purchase">
-                    <h3 style="margin-bottom: 15px;">🏅 Buy Premium Badges</h3>
-                    <div class="badge-option" onclick="selectBadge('stupid')">
-                        <div class="badge-option-info">
-                            <span class="badge stupid">STUPID</span>
-                            <span>The badge of shame. Wear it with... pride?</span>
-                        </div>
-                        <div class="badge-option-price">0.5 SOL</div>
-                    </div>
-                    <div class="badge-option" onclick="selectBadge('dumb')">
-                        <div class="badge-option-info">
-                            <span class="badge dumb">DUMB</span>
-                            <span>Golden stupidity. At least you're rich.</span>
-                        </div>
-                        <div class="badge-option-price">1.0 SOL</div>
-                    </div>
-                </div>
-            </div>
-        </section>
-    </main>
-
-    <footer>
-        <div class="container">
-            <p class="footer-text">© 2025 WhosTheDumbass.com — Measuring stupidity since always</p>
-            <div class="footer-links">
-                <a href="#">Twitter/X</a>
-                <a href="#">Discord</a>
-                <a href="#">Terms</a>
-                <a href="#">Privacy</a>
-            </div>
-            <div class="disclaimer">
-                ⚠️ DISCLAIMER: This is entertainment. Your IQ score is AI-generated based on your responses and has no scientific validity. 
-                Don't @ us when you discover you're the dumbass. You were warned.
-            </div>
-        </div>
-    </footer>
-
-    <div class="toast" id="toast"></div>
-
-    <script>
-        // ===== CONFIGURATION =====
-        const CONFIG = {
-            // Cloudflare Worker API (HMAC-signed, tamper-proof)
-            apiBase: 'https://whosthedumbass-api.warwideweb.workers.dev',
-            turnstileSiteKey: 'YOUR_TURNSTILE_SITE_KEY',
-            solPrice: 150, // USD per SOL (update as needed)
-            boostRate: 1, // positions per $10 USD
-            timerDuration: 120, // 2 minutes (nonce expiry)
-        };
+    <div class="container">
+        <h1>🧠 Who's The Dumbass?</h1>
+        <p class="subtitle">Find out if you're the idiot. Tamper-proof.</p>
         
-        // Turnstile state
-        let turnstileToken = null;
-        
-        function onTurnstileSuccess(token) {
-            turnstileToken = token;
-            document.getElementById('turnstileStatus').textContent = '✅ Verified human!';
-            document.getElementById('turnstileStatus').style.color = 'var(--neon-green)';
-            validateSubmitButton();
-        }
-
-        // ===== STATE =====
-        let timerInterval = null;
-        let timeRemaining = CONFIG.timerDuration;
-        let testStarted = false;
-        let hasSubmitted = false;
-
-        // ===== IQ CATEGORIES (for display) =====
-        const IQ_CATEGORIES = [
-            'logical_reasoning', 'pattern_recognition', 'verbal_comprehension',
-            'mathematical_ability', 'spatial_reasoning', 'memory_recall',
-            'processing_speed', 'abstract_thinking', 'critical_analysis',
-            'problem_decomposition', 'deductive_inductive_reasoning', 'systems_thinking',
-            'creative_problem_solving', 'knowledge_integration', 'deep_thinking',
-            'critical_thinking', 'building', 'electronics', 'software',
-            'communication', 'creativity', 'analysis', 'leadership',
-            'research', 'problem_solving', 'technical_depth', 'collaboration', 'innovation'
-        ];
-
-        // ===== INITIALIZATION =====
-        async function init() {
-            // Check if already tested
-            const existingScore = localStorage.getItem('wtd_iq_score');
-            const existingUsername = localStorage.getItem('wtd_username');
+        <div class="card">
+            <!-- Step 1 -->
+            <div class="step">
+                <div class="step-num">1</div>
+                <div class="step-content">
+                    <div class="step-title">Copy the challenge</div>
+                    <div class="step-desc">Get your unique scrambled prompt</div>
+                </div>
+            </div>
             
-            if (existingScore) {
-                showAlreadyTested(existingScore, existingUsername);
-            } else {
-                // Fetch nonce from secure API
-                await fetchNonce();
-            }
-
-            // Load leaderboard
-            loadLeaderboard();
-
-            // Animate stats
-            animateStats();
-        }
+            <button id="copyBtn" class="btn btn-green" onclick="copyChallenge()">
+                📋 COPY CHALLENGE
+            </button>
+            
+            <div id="timer" class="timer" style="display: none;"></div>
+            
+            <!-- Step 2 -->
+            <div class="step" style="margin-top: 25px;">
+                <div class="step-num">2</div>
+                <div class="step-content">
+                    <div class="step-title">Paste into ChatGPT</div>
+                    <div class="step-desc">Send it as a message, copy the response</div>
+                </div>
+            </div>
+            
+            <!-- Step 3 -->
+            <div class="step">
+                <div class="step-num">3</div>
+                <div class="step-content">
+                    <div class="step-title">Paste ChatGPT's response</div>
+                    <div class="step-desc">The JSON it gives you goes here</div>
+                </div>
+            </div>
+            
+            <textarea id="response" placeholder='Paste ChatGPT\'s JSON response here...'></textarea>
+            
+            <button id="verifyBtn" class="btn btn-pink" onclick="verify()" disabled>
+                🚀 GO / VERIFY
+            </button>
+            
+            <div id="status"></div>
+        </div>
         
-        async function fetchNonce() {
+        <!-- Result -->
+        <div id="result" class="result">
+            <div id="iqScore" class="iq-score">—</div>
+            <div id="verdict" class="verdict"></div>
+            
+            <div class="token-box">
+                <div class="token-label">Your proof token (share to verify)</div>
+                <div id="tokenValue" class="token-value"></div>
+                <button class="btn btn-green btn-copy-token" onclick="copyToken()">📋 Copy Token</button>
+            </div>
+        </div>
+        
+        <div class="footer">
+            🔒 Cryptographically signed. Tamper-proof.
+        </div>
+    </div>
+    
+    <script>
+        const API = "https://whosthedumbass-api.warwideweb.workers.dev";
+        
+        let currentNonce = null;
+        let expiresAt = null;
+        let timerInterval = null;
+        
+        const copyBtn = document.getElementById('copyBtn');
+        const verifyBtn = document.getElementById('verifyBtn');
+        const responseEl = document.getElementById('response');
+        const statusEl = document.getElementById('status');
+        const timerEl = document.getElementById('timer');
+        const resultEl = document.getElementById('result');
+        
+        // Enable verify when text is pasted
+        responseEl.addEventListener('input', () => {
+            verifyBtn.disabled = !responseEl.value.trim() || !currentNonce;
+        });
+        
+        async function copyChallenge() {
+            copyBtn.disabled = true;
+            copyBtn.textContent = '⏳ Getting challenge...';
+            statusEl.textContent = '';
+            statusEl.className = '';
+            
             try {
-                const res = await fetch(`${CONFIG.apiBase}/nonce`);
+                const res = await fetch(`${API}/challenge`);
                 const data = await res.json();
                 
-                if (data.nonce) {
-                    // Store nonce data
-                    sessionStorage.setItem('wtd_nonce', data.nonce);
-                    sessionStorage.setItem('wtd_timestamp', data.timestamp.toString());
-                    sessionStorage.setItem('wtd_expires', data.expires_at.toString());
-                    
-                    console.log('[WTD] Nonce received:', data.nonce);
-                    
-                    // Start the 2-minute timer
-                    startTimer();
-                } else {
-                    throw new Error('Failed to get nonce');
-                }
+                if (!data.ok) throw new Error(data.error || 'Failed to get challenge');
+                
+                currentNonce = data.nonce;
+                expiresAt = data.expires_at;
+                
+                // Copy to clipboard
+                await navigator.clipboard.writeText(data.challenge);
+                
+                copyBtn.textContent = '✅ COPIED! Now paste into ChatGPT';
+                statusEl.textContent = '✅ Challenge copied! Paste it into ChatGPT.';
+                statusEl.className = 'status-success';
+                
+                // Start countdown
+                startTimer();
+                
+                // Enable verify if there's text
+                verifyBtn.disabled = !responseEl.value.trim();
+                
             } catch (e) {
-                console.error('[WTD] API error:', e);
-                showToast('⚠️ Could not connect to server. Try refreshing.');
+                statusEl.textContent = `❌ ${e.message}`;
+                statusEl.className = 'status-error';
+                copyBtn.disabled = false;
+                copyBtn.textContent = '📋 COPY CHALLENGE';
             }
         }
-
-        function showAlreadyTested(score, username) {
-            document.getElementById('testSection').style.display = 'none';
-            document.getElementById('alreadyTested').style.display = 'block';
-            document.getElementById('lockedScore').textContent = score;
-            
-            // Update IQ display
-            updateIQDisplay(parseInt(score));
-        }
-
-        // ===== COPY FUNCTIONALITY =====
-        function copyWallet(type) {
-            const wallet = document.getElementById(type + 'Wallet').textContent;
-            navigator.clipboard.writeText(wallet).then(() => {
-                showToast('✓ Wallet address copied!');
-            });
-        }
-
-        function copyDnaToken() {
-            const token = document.getElementById('dnaTokenDisplay').value;
-            if (!token) return;
-            navigator.clipboard.writeText(token).then(() => {
-                showToast('✓ DNA token copied! Share it to prove your score.');
-            });
-        }
-
-        function pasteFromClipboard() {
-            navigator.clipboard.readText().then(text => {
-                const input = document.getElementById('conversationInput');
-                input.value = text;
-                input.dispatchEvent(new Event('input'));
-                showToast('✓ Pasted from clipboard!');
-            }).catch(err => {
-                showToast('❌ Paste failed - use Ctrl+V / Cmd+V');
-            });
-        }
-
-        // ===== TIMER =====
+        
         function startTimer() {
-            if (testStarted) return;
-            testStarted = true;
-            
-            document.getElementById('timerContainer').style.display = 'block';
+            timerEl.style.display = 'block';
+            clearInterval(timerInterval);
             
             timerInterval = setInterval(() => {
-                timeRemaining--;
-                updateTimerDisplay();
+                const remaining = Math.max(0, Math.floor((expiresAt - Date.now()) / 1000));
+                timerEl.textContent = `⏱️ ${remaining}s remaining`;
                 
-                if (timeRemaining <= 0) {
+                if (remaining <= 0) {
                     clearInterval(timerInterval);
-                    // Auto-submit with low score
-                    autoSubmitTimeout();
+                    timerEl.textContent = '⏱️ EXPIRED - get new challenge';
+                    currentNonce = null;
+                    copyBtn.disabled = false;
+                    copyBtn.textContent = '📋 COPY CHALLENGE';
+                    verifyBtn.disabled = true;
                 }
             }, 1000);
         }
-
-        function updateTimerDisplay() {
-            const minutes = Math.floor(timeRemaining / 60);
-            const seconds = timeRemaining % 60;
-            const timerEl = document.getElementById('timer');
-            
-            timerEl.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-            
-            if (timeRemaining <= 30) {
-                timerEl.classList.add('warning');
-            }
-        }
-
-        function autoSubmitTimeout() {
-            showToast('⏰ TIME\'S UP! Calculating your (probably low) IQ...');
-            // Penalize for timeout
-            processResult(75);
-        }
-
-        // ===== RESPONSE HANDLING =====
-        function handleConversationInput() {
-            const conversation = document.getElementById('conversationInput').value;
-            const hasContent = conversation.trim().length >= 100;
-            
-            if (hasContent) {
-                document.getElementById('step1').classList.add('completed');
-                document.getElementById('step1').classList.remove('active');
-                document.getElementById('step2').classList.add('active');
-            }
-            
-            validateSubmitButton();
-        }
         
-        function validateSubmitButton() {
-            const username = document.getElementById('usernameInput').value.trim();
-            const hasUsername = username.length >= 2;
-            const conversation = document.getElementById('conversationInput')?.value || '';
-            const hasConversation = conversation.trim().length >= 100;
+        async function verify() {
+            if (!currentNonce) {
+                statusEl.textContent = '❌ Get a new challenge first';
+                statusEl.className = 'status-error';
+                return;
+            }
             
-            document.getElementById('submitBtn').disabled = !(hasConversation && hasUsername);
-        }
-
-        async function submitTest() {
-            if (hasSubmitted) return;
-            hasSubmitted = true;
+            const jsonResponse = responseEl.value.trim();
+            if (!jsonResponse) {
+                statusEl.textContent = '❌ Paste ChatGPT\'s response first';
+                statusEl.className = 'status-error';
+                return;
+            }
             
-            const username = document.getElementById('usernameInput').value.trim();
-            const submitBtn = document.getElementById('submitBtn');
-            submitBtn.innerHTML = '<span>⏳</span> Analyzing...';
-            submitBtn.disabled = true;
-            
-            let iq = null;
-            let sealedToken = null;
+            verifyBtn.disabled = true;
+            verifyBtn.textContent = '⏳ Verifying...';
+            statusEl.textContent = '🔐 Validating response...';
+            statusEl.className = '';
             
             try {
-                const conversation = document.getElementById('conversationInput').value.trim();
-                
-                if (conversation.length < 100) {
-                    showToast('⚠️ Paste a longer conversation.');
-                    hasSubmitted = false;
-                    submitBtn.innerHTML = '<span>🧠</span> Reveal My IQ';
-                    return;
-                }
-                
-                showToast('🧠 AI is analyzing your conversation...');
-                
-                // Server-side analysis - prompt is HIDDEN from user
-                const res = await fetch(`${CONFIG.apiBase}/analyze`, {
+                const res = await fetch(`${API}/verify`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        transcript: conversation,
-                        username: username
+                    body: JSON.stringify({
+                        nonce: currentNonce,
+                        response: jsonResponse
                     })
                 });
                 
                 const data = await res.json();
                 
-                if (data.ok) {
-                    sealedToken = data.token;
-                    iq = data.iq;
-                    showToast('✅ Analysis complete!');
-                } else {
-                    if (data.error === 'rate_limited') {
-                        showToast('🚫 You already took the test from this IP. One attempt only!');
-                    } else if (data.error === 'llm_api_error') {
-                        showToast('⚠️ AI is busy. Try again in a moment.');
-                    } else {
-                        showToast(`⚠️ Error: ${data.error}`);
-                    }
-                    hasSubmitted = false;
-                    submitBtn.innerHTML = '<span>🧠</span> Reveal My IQ';
-                    return;
-                }
+                if (!data.ok) throw new Error(data.error || 'Verification failed');
+                
+                // Success!
+                clearInterval(timerInterval);
+                timerEl.style.display = 'none';
+                
+                statusEl.textContent = '✅ Verified!';
+                statusEl.className = 'status-success';
+                
+                showResult(data.iq, data.token);
                 
             } catch (e) {
-                console.error('Submit error:', e);
-                showToast('⚠️ Network error. Try again.');
-                hasSubmitted = false;
-                submitBtn.innerHTML = '<span>🧠</span> Reveal My IQ';
-                return;
-            }
-            
-            // Save results
-            localStorage.setItem('wtd_iq_score', iq.toString());
-            localStorage.setItem('wtd_username', username);
-            localStorage.setItem('wtd_timestamp', Date.now().toString());
-            if (sealedToken) localStorage.setItem('wtd_sealed_token', sealedToken);
-            
-            processResult(iq, username);
-        }
-
-        function processResult(iq, username = 'Anonymous') {
-            // Update display
-            updateIQDisplay(iq);
-            
-            // Add to leaderboard
-            addToLeaderboard(username, iq);
-            
-            // Show test section as completed
-            document.getElementById('testSection').style.display = 'none';
-            document.getElementById('alreadyTested').style.display = 'block';
-            document.getElementById('lockedScore').textContent = iq;
-            
-            // Show DNA token if available
-            const savedToken = localStorage.getItem('wtd_sealed_token');
-            if (savedToken) {
-                document.getElementById('dnaTokenDisplay').value = savedToken;
-                document.getElementById('tokenSection').style.display = 'block';
-            }
-            
-            // Celebration or shame
-            if (iq >= 130) {
-                showToast('🎉 GENIUS DETECTED! You\'re actually smart!');
-                triggerConfetti();
-            } else if (iq >= 100) {
-                showToast('😐 You\'re... fine. Average. Mediocre.');
-            } else {
-                showToast('💀 DUMBASS CONFIRMED! We have a winner!');
+                statusEl.textContent = `❌ ${e.message}`;
+                statusEl.className = 'status-error';
+                verifyBtn.disabled = false;
+                verifyBtn.textContent = '🚀 GO / VERIFY';
             }
         }
-
-        function updateIQDisplay(iq) {
-            const numberEl = document.getElementById('iqNumber');
-            const verdictEl = document.getElementById('iqVerdict');
+        
+        function showResult(iq, token) {
+            const scoreEl = document.getElementById('iqScore');
+            const verdictEl = document.getElementById('verdict');
+            const tokenEl = document.getElementById('tokenValue');
             
-            // Animate number
-            animateNumber(numberEl, 0, iq, 1500);
+            scoreEl.textContent = iq;
+            tokenEl.textContent = token;
             
-            // Set color class
-            numberEl.classList.remove('pending', 'genius', 'average', 'dumb');
+            // Color + verdict
+            scoreEl.classList.remove('genius', 'average', 'dumb');
             if (iq >= 130) {
-                numberEl.classList.add('genius');
+                scoreEl.classList.add('genius');
                 verdictEl.textContent = '🧠 CERTIFIED GENIUS';
-                verdictEl.style.color = 'var(--neon-green)';
             } else if (iq >= 100) {
-                numberEl.classList.add('average');
+                scoreEl.classList.add('average');
                 verdictEl.textContent = '😐 PAINFULLY AVERAGE';
-                verdictEl.style.color = 'var(--neon-yellow)';
             } else {
-                numberEl.classList.add('dumb');
-                verdictEl.textContent = '💀 CERTIFIED DUMBASS';
-                verdictEl.style.color = 'var(--neon-red)';
-            }
-        }
-
-        function animateNumber(el, start, end, duration) {
-            const range = end - start;
-            const startTime = performance.now();
-            
-            function update(currentTime) {
-                const elapsed = currentTime - startTime;
-                const progress = Math.min(elapsed / duration, 1);
-                const eased = 1 - Math.pow(1 - progress, 3); // ease out cubic
-                const current = Math.floor(start + range * eased);
-                el.textContent = current;
-                
-                if (progress < 1) {
-                    requestAnimationFrame(update);
-                }
+                scoreEl.classList.add('dumb');
+                verdictEl.textContent = '🤡 CERTIFIED DUMBASS';
             }
             
-            requestAnimationFrame(update);
+            resultEl.classList.add('show');
         }
-
-        // ===== LEADERBOARD =====
-        const MOCK_LEADERBOARD = [
-            { rank: 1, username: '@BigBrain420', iq: 158, links: 'twitter.com/bigbrain', boost: 500, badges: [] },
-            { rank: 2, username: '@QuantumThot', iq: 152, links: 'onlyfans.com/smart', boost: 0, badges: ['stupid'] },
-            { rank: 3, username: '@ElonSimp', iq: 147, links: 'x.com/elonsimp', boost: 250, badges: [] },
-            { rank: 4, username: '@ActualGenius', iq: 145, links: 'github.com/genius', boost: 0, badges: [] },
-            { rank: 5, username: '@CryptoKid', iq: 142, links: 'debank.com/profile', boost: 1000, badges: ['dumb'] },
-            { rank: 6, username: '@GPTWhisperer', iq: 141, links: 'linkedin.com/in/ai', boost: 0, badges: [] },
-            { rank: 7, username: '@MidcurveMaxi', iq: 138, links: null, boost: 0, badges: [] },
-            { rank: 8, username: '@DegenDave', iq: 135, links: null, boost: 750, badges: ['stupid', 'dumb'] },
-            { rank: 9, username: '@SolanaSteve', iq: 128, links: null, boost: 0, badges: [] },
-            { rank: 10, username: '@NFTNormie', iq: 119, links: null, boost: 0, badges: [] },
-            { rank: 11, username: '@AverageAndy', iq: 105, links: null, boost: 0, badges: [] },
-            { rank: 12, username: '@RoomTempIQ', iq: 98, links: null, boost: 200, badges: ['dumb'] },
-            { rank: 13, username: '@SmoothBrain', iq: 89, links: null, boost: 0, badges: [] },
-            { rank: 14, username: '@ActualDumbass', iq: 78, links: null, boost: 0, badges: ['stupid'] },
-            { rank: 15, username: '@BrickIQ', iq: 72, links: null, boost: 0, badges: [] },
-        ];
-
-        function loadLeaderboard() {
-            const body = document.getElementById('leaderboardBody');
-            body.innerHTML = '';
-            
-            MOCK_LEADERBOARD.forEach((user, index) => {
-                const row = createLeaderboardRow(user, index);
-                body.appendChild(row);
+        
+        function copyToken() {
+            const token = document.getElementById('tokenValue').textContent;
+            navigator.clipboard.writeText(token).then(() => {
+                statusEl.textContent = '✅ Token copied!';
+                statusEl.className = 'status-success';
             });
         }
-
-        function createLeaderboardRow(user, index) {
-            const row = document.createElement('div');
-            row.className = 'leaderboard-row';
-            
-            // Rank
-            let rankContent = '';
-            if (index === 0) rankContent = '<span class="rank-medal">🥇</span>';
-            else if (index === 1) rankContent = '<span class="rank-medal">🥈</span>';
-            else if (index === 2) rankContent = '<span class="rank-medal">🥉</span>';
-            else rankContent = `<span class="rank">#${user.rank}</span>`;
-            
-            // IQ class
-            let iqClass = 'low';
-            if (user.iq >= 130) iqClass = 'high';
-            else if (user.iq >= 100) iqClass = 'medium';
-            
-            // Badges
-            let badgesHtml = '';
-            user.badges.forEach(badge => {
-                badgesHtml += `<span class="badge ${badge}">${badge.toUpperCase()}</span>`;
-            });
-            
-            // Links
-            let linksHtml = '';
-            if (user.iq >= 140 && user.links) {
-                linksHtml = `<a href="https://${user.links}" target="_blank">🔗 ${user.links.split('/')[0]}</a>`;
-            } else if (user.iq < 140) {
-                linksHtml = `<span class="too-stupid">TOO STUPID FOR LINKS</span>`;
-            } else {
-                linksHtml = `<span style="color: var(--text-muted)">No links</span>`;
-            }
-            
-            // Boost
-            let boostHtml = user.boost > 0 ? `+$${user.boost}` : '—';
-            
-            row.innerHTML = `
-                <div>${rankContent}</div>
-                <div class="user-info">
-                    <span class="username">${user.username}</span>
-                    ${badgesHtml}
-                </div>
-                <div class="iq-score ${iqClass}">${user.iq}</div>
-                <div class="user-links">${linksHtml}</div>
-                <div class="boost-amount">${boostHtml}</div>
-            `;
-            
-            return row;
-        }
-
-        function addToLeaderboard(username, iq) {
-            // Add to mock data (in real app, this would be an API call)
-            const newUser = {
-                rank: MOCK_LEADERBOARD.length + 1,
-                username: '@' + username,
-                iq: iq,
-                links: null,
-                boost: 0,
-                badges: []
-            };
-            
-            MOCK_LEADERBOARD.push(newUser);
-            
-            // Re-sort by IQ (and boost)
-            MOCK_LEADERBOARD.sort((a, b) => {
-                const aScore = a.iq + (a.boost / 100);
-                const bScore = b.iq + (b.boost / 100);
-                return bScore - aScore;
-            });
-            
-            // Update ranks
-            MOCK_LEADERBOARD.forEach((user, idx) => user.rank = idx + 1);
-            
-            // Reload display
-            loadLeaderboard();
-        }
-
-        // ===== BOOST PREVIEW =====
-        function updateBoostPreview(type) {
-            const amount = parseFloat(document.getElementById(type + 'Amount').value) || 0;
-            let usdValue = amount;
-            
-            if (type === 'sol') {
-                usdValue = amount * CONFIG.solPrice;
-            }
-            
-            const positions = Math.floor(usdValue / 10) * CONFIG.boostRate;
-            document.getElementById(type + 'Boost').textContent = `+${positions} positions`;
-        }
-
-        // ===== BADGE PURCHASE =====
-        function selectBadge(type) {
-            showToast(`🏅 ${type.toUpperCase()} badge selected! Send payment to claim.`);
-        }
-
-        // ===== STATS ANIMATION =====
-        function animateStats() {
-            setInterval(() => {
-                const testsEl = document.getElementById('testsToday');
-                const currentTests = parseInt(testsEl.textContent.replace(',', ''));
-                testsEl.textContent = (currentTests + Math.floor(Math.random() * 3)).toLocaleString();
-            }, 5000);
-        }
-
-        // ===== TOAST =====
-        function showToast(message) {
-            const toast = document.getElementById('toast');
-            toast.textContent = message;
-            toast.classList.add('show');
-            
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 3000);
-        }
-
-        // ===== CONFETTI =====
-        function triggerConfetti() {
-            const confettiContainer = document.createElement('div');
-            confettiContainer.className = 'confetti';
-            document.body.appendChild(confettiContainer);
-            
-            const colors = ['#00ff88', '#ff0080', '#8b5cf6', '#00d4ff', '#ffd000'];
-            
-            for (let i = 0; i < 100; i++) {
-                const confetti = document.createElement('div');
-                confetti.style.cssText = `
-                    position: absolute;
-                    width: 10px;
-                    height: 10px;
-                    background: ${colors[Math.floor(Math.random() * colors.length)]};
-                    left: ${Math.random() * 100}%;
-                    top: -10px;
-                    animation: fall ${2 + Math.random() * 2}s linear forwards;
-                    transform: rotate(${Math.random() * 360}deg);
-                `;
-                confettiContainer.appendChild(confetti);
-            }
-            
-            // Add animation
-            const style = document.createElement('style');
-            style.textContent = `
-                @keyframes fall {
-                    to {
-                        top: 100%;
-                        transform: rotate(${720 + Math.random() * 360}deg);
-                    }
-                }
-            `;
-            document.head.appendChild(style);
-            
-            setTimeout(() => {
-                confettiContainer.remove();
-                style.remove();
-            }, 4000);
-        }
-
-        // Initialize on load
-        document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
 </html>
-<!-- Cache bust: 1770300207 -->
