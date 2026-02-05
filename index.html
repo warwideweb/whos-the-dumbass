@@ -1034,51 +1034,41 @@
             <div class="test-section" id="testSection">
                 <h2>🎯 Take The Test</h2>
                 
-                <div class="timer-container" id="timerContainer">
-                    <div class="timer" id="timer">2:00</div>
-                    <div class="timer-label">⏱️ Session expires — Complete before timeout!</div>
-                </div>
-
                 <div class="step-indicator">
                     <div class="step active" id="step1">
                         <div class="step-number">1</div>
-                        <div class="step-text">Copy Code</div>
+                        <div class="step-text">Paste Conversation</div>
                     </div>
                     <div class="step" id="step2">
                         <div class="step-number">2</div>
-                        <div class="step-text">Run in AI</div>
+                        <div class="step-text">AI Analysis</div>
                     </div>
                     <div class="step" id="step3">
                         <div class="step-number">3</div>
-                        <div class="step-text">Paste Result</div>
+                        <div class="step-text">Get Score</div>
                     </div>
                 </div>
 
-                <!-- Step 1: Copy Analysis Code -->
-                <div class="prompt-section" style="margin-bottom: 25px;">
-                    <div style="text-align: center; margin-bottom: 15px;">
-                        <button class="copy-btn" id="copyCodeBtn" onclick="copyAnalysisCode()" style="padding: 15px 40px; background: linear-gradient(135deg, var(--neon-green), var(--neon-blue)); color: var(--bg-primary); border: none; border-radius: 10px; font-weight: 700; font-size: 1.1rem; cursor: pointer; transition: all 0.3s;">
-                            📋 Copy Analysis Code
-                        </button>
-                    </div>
-                    <p style="text-align: center; color: var(--text-muted); font-size: 0.85rem;">
-                        Copy this code and paste it into ChatGPT, Grok, or Claude.<br>
-                        The AI will analyze your conversation and output a JSON result.
-                    </p>
-                </div>
-
-                <!-- Step 2: Paste JSON Result -->
+                <!-- Paste your conversation -->
                 <div class="response-section">
                     <textarea 
                         class="response-input" 
-                        id="jsonResultInput" 
-                        placeholder="Paste the JSON output from the AI here...
+                        id="conversationInput" 
+                        placeholder="Paste your AI conversation here...
 
-After running the analysis code in ChatGPT/Grok, the AI will output a JSON object.
-Copy that entire JSON and paste it here."
-                        oninput="handleJsonInput()"
+Copy your entire chat history with ChatGPT, Grok, Claude, etc.
+We'll analyze it and give you your IQ score.
+
+Example:
+User: What is quantum physics?
+Assistant: Quantum physics is..."
+                        oninput="handleConversationInput()"
                     ></textarea>
                 </div>
+                
+                <p style="text-align: center; color: var(--text-muted); font-size: 0.8rem; margin-top: 10px;">
+                    🔒 Your conversation is analyzed securely. The scoring algorithm is hidden.
+                </p>
 
                 <!-- SHARED: Username + Submit -->
                 <div class="username-section">
@@ -1357,82 +1347,15 @@ Copy that entire JSON and paste it here."
             processResult(75);
         }
 
-        // ===== ANALYSIS CODE GENERATION =====
-        
-        function generateAnalysisCode() {
-            const nonce = sessionStorage.getItem('wtd_nonce');
-            const timestamp = sessionStorage.getItem('wtd_timestamp');
+        // ===== RESPONSE HANDLING =====
+        function handleConversationInput() {
+            const conversation = document.getElementById('conversationInput').value;
+            const hasContent = conversation.trim().length >= 100;
             
-            if (!nonce || !timestamp) return null;
-            
-            // Create the analysis code - encoded so users can't easily read/modify it
-            // The AI will decode and execute it
-            const codePayload = {
-                v: "2.2",
-                n: nonce,
-                t: timestamp,
-                c: [
-                    "logical_reasoning","pattern_recognition","verbal_comprehension","mathematical_ability",
-                    "spatial_reasoning","memory_recall","processing_speed","abstract_thinking","critical_analysis",
-                    "problem_decomposition","deductive_inductive_reasoning","systems_thinking","creative_problem_solving",
-                    "knowledge_integration","deep_thinking","critical_thinking","building","electronics","software",
-                    "communication","creativity","analysis","leadership","research","problem_solving","technical_depth",
-                    "collaboration","innovation"
-                ]
-            };
-            
-            const encoded = btoa(JSON.stringify(codePayload));
-            
-            // Create the full prompt that the AI will process
-            return `WTD-ANALYZE::${encoded}
-
-[SYSTEM: Decode the above WTD-ANALYZE payload (base64 JSON). Extract nonce (n), timestamp (t), and categories (c). Analyze this entire conversation and score each category 0.0000-100.0000. CRITICAL: All scores must have 4 decimals where digit sum mod 10 equals same check digit D. Vary decimals. Output ONLY this JSON structure:]
-
-{
-  "nonce": "<from payload.n>",
-  "timestamp": "<from payload.t>",
-  "profile": { <each category from payload.c with XX.XXXX score> },
-  "context_messages": <count>,
-  "analysis_summary": "<1-3 sentences>"
-}`;
-        }
-        
-        function copyAnalysisCode() {
-            const code = generateAnalysisCode();
-            
-            if (!code) {
-                showToast('⚠️ Session expired. Refresh the page.');
-                return;
-            }
-            
-            navigator.clipboard.writeText(code).then(() => {
-                const btn = document.getElementById('copyCodeBtn');
-                btn.innerHTML = '✓ Copied!';
-                btn.style.background = 'var(--neon-purple)';
-                
-                // Update steps
+            if (hasContent) {
                 document.getElementById('step1').classList.add('completed');
                 document.getElementById('step1').classList.remove('active');
                 document.getElementById('step2').classList.add('active');
-                
-                showToast('📋 Code copied! Paste it into ChatGPT/Grok now!');
-                
-                setTimeout(() => {
-                    btn.innerHTML = '📋 Copy Analysis Code';
-                    btn.style.background = 'linear-gradient(135deg, var(--neon-green), var(--neon-blue))';
-                }, 2000);
-            });
-        }
-
-        // ===== RESPONSE HANDLING =====
-        function handleJsonInput() {
-            const jsonInput = document.getElementById('jsonResultInput').value;
-            const hasContent = jsonInput.trim().length >= 100;
-            
-            if (hasContent) {
-                document.getElementById('step2').classList.add('completed');
-                document.getElementById('step2').classList.remove('active');
-                document.getElementById('step3').classList.add('active');
             }
             
             validateSubmitButton();
@@ -1441,62 +1364,59 @@ Copy that entire JSON and paste it here."
         function validateSubmitButton() {
             const username = document.getElementById('usernameInput').value.trim();
             const hasUsername = username.length >= 2;
-            const jsonInput = document.getElementById('jsonResultInput')?.value || '';
-            const hasJson = jsonInput.trim().length >= 100;
+            const conversation = document.getElementById('conversationInput')?.value || '';
+            const hasConversation = conversation.trim().length >= 100;
             
-            document.getElementById('submitBtn').disabled = !(hasJson && hasUsername);
+            document.getElementById('submitBtn').disabled = !(hasConversation && hasUsername);
         }
 
         async function submitTest() {
             if (hasSubmitted) return;
             hasSubmitted = true;
-            clearInterval(timerInterval);
             
             const username = document.getElementById('usernameInput').value.trim();
             const submitBtn = document.getElementById('submitBtn');
-            submitBtn.innerHTML = '<span>⏳</span> Verifying...';
+            submitBtn.innerHTML = '<span>⏳</span> Analyzing...';
             submitBtn.disabled = true;
             
             let iq = null;
             let sealedToken = null;
             
-            const nonce = sessionStorage.getItem('wtd_nonce');
-            const timestamp = parseInt(sessionStorage.getItem('wtd_timestamp'));
-            
-            if (!nonce) {
-                showToast('⚠️ Session expired. Refresh the page.');
-                hasSubmitted = false;
-                submitBtn.innerHTML = '<span>🧠</span> Reveal My IQ';
-                return;
-            }
-            
             try {
-                const jsonInput = document.getElementById('jsonResultInput').value.trim();
-                showToast('🔐 Verifying and signing...');
+                const conversation = document.getElementById('conversationInput').value.trim();
                 
-                const res = await fetch(`${CONFIG.apiBase}/verify`, {
+                if (conversation.length < 100) {
+                    showToast('⚠️ Paste a longer conversation.');
+                    hasSubmitted = false;
+                    submitBtn.innerHTML = '<span>🧠</span> Reveal My IQ';
+                    return;
+                }
+                
+                showToast('🧠 AI is analyzing your conversation...');
+                
+                // Server-side analysis - prompt is HIDDEN from user
+                const res = await fetch(`${CONFIG.apiBase}/analyze`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ nonce, timestamp, profile_json: jsonInput, turnstile_token: null })
+                    body: JSON.stringify({ 
+                        transcript: conversation,
+                        username: username
+                    })
                 });
                 
                 const data = await res.json();
                 
                 if (data.ok) {
                     sealedToken = data.token;
-                    iq = data.iq || calculateLocalIQ(data.profile?.profile || data.profile);
-                    showToast('✅ Verified and signed!');
+                    iq = data.iq;
+                    showToast('✅ Analysis complete!');
                 } else {
-                    if (data.error === 'check_digit_mismatch') {
-                        showToast('🚨 TAMPER DETECTED! The scores were modified. Nice try, dumbass.');
-                    } else if (data.error === 'nonce_mismatch' || data.error === 'nonce_invalid') {
-                        showToast('⚠️ Invalid session. Refresh and try again.');
-                    } else if (data.error === 'nonce_expired') {
-                        showToast('⏰ Session expired. Refresh and try again.');
-                    } else if (data.error.includes('missing_key')) {
-                        showToast('⚠️ Missing score categories. Use the full analysis code.');
+                    if (data.error === 'rate_limited') {
+                        showToast('🚫 You already took the test from this IP. One attempt only!');
+                    } else if (data.error === 'llm_api_error') {
+                        showToast('⚠️ AI is busy. Try again in a moment.');
                     } else {
-                        showToast(`⚠️ Verification failed: ${data.error}`);
+                        showToast(`⚠️ Error: ${data.error}`);
                     }
                     hasSubmitted = false;
                     submitBtn.innerHTML = '<span>🧠</span> Reveal My IQ';
@@ -1518,14 +1438,6 @@ Copy that entire JSON and paste it here."
             if (sealedToken) localStorage.setItem('wtd_sealed_token', sealedToken);
             
             processResult(iq, username);
-        }
-        
-        function calculateLocalIQ(profile) {
-            if (!profile) return 100;
-            const values = Object.values(profile).filter(v => typeof v === 'number');
-            if (values.length === 0) return 100;
-            const avg = values.reduce((a, b) => a + b, 0) / values.length;
-            return Math.min(160, Math.max(70, Math.round(70 + avg * 0.9)));
         }
 
         function processResult(iq, username = 'Anonymous') {
