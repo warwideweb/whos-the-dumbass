@@ -1050,7 +1050,7 @@
                 </div>
 
                 <!-- Paste your conversation -->
-                <div class="response-section">
+                <div class="response-section" style="position: relative;">
                     <textarea 
                         class="response-input" 
                         id="conversationInput" 
@@ -1064,9 +1064,10 @@ User: What is quantum physics?
 Assistant: Quantum physics is..."
                         oninput="handleConversationInput()"
                     ></textarea>
+                    <button onclick="pasteFromClipboard()" style="position: absolute; top: 10px; right: 10px; padding: 8px 16px; background: var(--neon-green); color: #000; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.85rem; z-index: 10;">📋 Paste</button>
                 </div>
                 
-                <p style="text-align: center; color: var(--text-muted); font-size: 0.8rem; margin-top: 10px;">
+                <p style="text-align: center; color: var(--text-muted); font-size: 0.8rem; margin-top: 10px; width: 100%;">
                     🔒 Your conversation is analyzed securely. The scoring algorithm is hidden.
                 </p>
 
@@ -1324,6 +1325,17 @@ Assistant: Quantum physics is..."
             if (!token) return;
             navigator.clipboard.writeText(token).then(() => {
                 showToast('✓ DNA token copied! Share it to prove your score.');
+            });
+        }
+
+        function pasteFromClipboard() {
+            navigator.clipboard.readText().then(text => {
+                const input = document.getElementById('conversationInput');
+                input.value = text;
+                input.dispatchEvent(new Event('input'));
+                showToast('✓ Pasted from clipboard!');
+            }).catch(err => {
+                showToast('❌ Paste failed - use Ctrl+V / Cmd+V');
             });
         }
 
