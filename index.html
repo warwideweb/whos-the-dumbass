@@ -1110,10 +1110,7 @@
                     </div>
                 </div>
                 
-                <!-- Reset Button (for testing) -->
-                <button onclick="resetTest()" style="margin-top: 20px; padding: 10px 20px; background: transparent; border: 1px solid var(--text-muted); color: var(--text-muted); border-radius: 8px; cursor: pointer; font-size: 0.8rem;">
-                    🔄 Reset (Take Test Again)
-                </button>
+                <!-- One and done - no reset -->
             </div>
         </section>
 
@@ -1155,9 +1152,9 @@
                     <div class="payment-card">
                         <h3>☀️ Pay with SOL</h3>
                         <div class="wallet-display">
-                            <div class="wallet-label">Wallet Address</div>
+                            <div class="wallet-label">Solana Wallet</div>
                             <div class="wallet-address">
-                                <span id="solWallet">DUMBa55Y0uR50LwaLL3tADDR355H3R3</span>
+                                <span id="solWallet">AriTQL1mpcBg8bSnmuZn7u1sHF8XZQmCmLDgt5NsYSLw</span>
                                 <span class="copy-icon" onclick="copyWallet('sol')">📋</span>
                             </div>
                         </div>
@@ -1174,23 +1171,23 @@
                     </div>
 
                     <div class="payment-card">
-                        <h3>💵 Pay with USDC</h3>
+                        <h3>₿ Pay with BTC</h3>
                         <div class="wallet-display">
-                            <div class="wallet-label">Wallet Address</div>
+                            <div class="wallet-label">Bitcoin Wallet</div>
                             <div class="wallet-address">
-                                <span id="usdcWallet">DUMBa55Y0uR50LwaLL3tADDR355H3R3</span>
-                                <span class="copy-icon" onclick="copyWallet('usdc')">📋</span>
+                                <span id="btcWallet">bc1qr5edxvw97uef8297uymh036dsercf33kjta3k0</span>
+                                <span class="copy-icon" onclick="copyWallet('btc')">📋</span>
                             </div>
                         </div>
                         <div class="amount-input-group">
-                            <input type="number" class="amount-input" id="usdcAmount" placeholder="0.00" step="1" oninput="updateBoostPreview('usdc')">
+                            <input type="number" class="amount-input" id="btcAmount" placeholder="0.00" step="0.0001" oninput="updateBoostPreview('btc')">
                             <div class="currency-badge">
-                                <span>$</span> USDC
+                                <span>₿</span> BTC
                             </div>
                         </div>
                         <div class="boost-preview">
                             <div class="boost-preview-label">Ranking Boost</div>
-                            <div class="boost-preview-value" id="usdcBoost">+0 positions</div>
+                            <div class="boost-preview-value" id="btcBoost">+0 positions</div>
                         </div>
                     </div>
                 </div>
@@ -1418,12 +1415,20 @@
                 return;
             }
             
-            const response = document.getElementById('conversationInput').value.trim();
+            let response = document.getElementById('conversationInput').value;
             
-            if (!response.includes('IQ2RES::')) {
-                showToast('❌ Response must contain IQ2RES::... from ChatGPT');
+            // Strip extra whitespace and extract just the IQ2RES line
+            response = response.trim().replace(/\s+/g, ' ');
+            
+            // Extract just the IQ2RES::... part (ignore any extra text)
+            const match = response.match(/IQ2RES::[A-Za-z0-9_-]+/);
+            if (!match) {
+                showToast('❌ Response must contain IQ2RES::... from ChatGPT/Gemini');
                 return;
             }
+            
+            // Use only the extracted token (max 5000 chars for safety)
+            const cleanResponse = match[0].substring(0, 5000);
             
             hasSubmitted = true;
             
@@ -1438,11 +1443,11 @@
             try {
                 showToast('🔐 Verifying response...');
                 
-                // Verify the IQ2RES response
+                // Verify the IQ2RES response (cleaned)
                 const res = await fetch(`${CONFIG.apiBase}/verify`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ response: response })
+                    body: JSON.stringify({ response: cleanResponse })
                 });
                 
                 const data = await res.json();
@@ -1758,7 +1763,9 @@
             let usdValue = amount;
             
             if (type === 'sol') {
-                usdValue = amount * CONFIG.solPrice;
+                usdValue = amount * CONFIG.solPrice; // ~$150
+            } else if (type === 'btc') {
+                usdValue = amount * 100000; // ~$100k per BTC
             }
             
             const positions = Math.floor(usdValue / 10) * CONFIG.boostRate;
