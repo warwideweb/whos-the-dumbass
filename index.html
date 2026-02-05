@@ -1034,41 +1034,96 @@
             <div class="test-section" id="testSection">
                 <h2>🎯 Take The Test</h2>
                 
-                <div class="step-indicator">
-                    <div class="step active" id="step1">
-                        <div class="step-number">1</div>
-                        <div class="step-text">Paste Transcript</div>
-                    </div>
-                    <div class="step" id="step2">
-                        <div class="step-number">2</div>
-                        <div class="step-text">Verify Human</div>
-                    </div>
-                    <div class="step" id="step3">
-                        <div class="step-number">3</div>
-                        <div class="step-text">Get Results</div>
-                    </div>
+                <!-- Mode Tabs -->
+                <div class="mode-tabs" style="display: flex; justify-content: center; gap: 10px; margin-bottom: 25px;">
+                    <button class="mode-tab active" id="autoTab" onclick="switchMode('auto')" style="padding: 12px 30px; background: var(--neon-green); color: var(--bg-primary); border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                        ⚡ Auto Mode
+                    </button>
+                    <button class="mode-tab" id="manualTab" onclick="switchMode('manual')" style="padding: 12px 30px; background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 8px; font-weight: 600; cursor: pointer;">
+                        🔧 Manual Mode
+                    </button>
                 </div>
 
-                <div class="timer-container" id="timerContainer" style="display: none;">
+                <div class="timer-container" id="timerContainer">
                     <div class="timer" id="timer">2:00</div>
                     <div class="timer-label">⏱️ Nonce expires — Submit before timeout!</div>
                 </div>
 
-                <div class="response-section">
-                    <textarea 
-                        class="response-input" 
-                        id="responseInput" 
-                        placeholder="Paste your ChatGPT conversation transcript here...
+                <!-- AUTO MODE -->
+                <div id="autoModeSection">
+                    <div class="step-indicator">
+                        <div class="step active" id="autoStep1">
+                            <div class="step-number">1</div>
+                            <div class="step-text">Paste Transcript</div>
+                        </div>
+                        <div class="step" id="autoStep2">
+                            <div class="step-number">2</div>
+                            <div class="step-text">AI Analyzes</div>
+                        </div>
+                        <div class="step" id="autoStep3">
+                            <div class="step-number">3</div>
+                            <div class="step-text">Get Results</div>
+                        </div>
+                    </div>
+
+                    <div class="response-section">
+                        <textarea 
+                            class="response-input" 
+                            id="transcriptInput" 
+                            placeholder="Paste your ChatGPT conversation transcript here...
 
 Example:
 User: What is quantum physics?
 Assistant: Quantum physics is a branch of physics...
 User: Can you explain it simpler?
 ..."
-                        oninput="handleResponseInput()"
-                    ></textarea>
+                            oninput="handleAutoInput()"
+                        ></textarea>
+                    </div>
                 </div>
 
+                <!-- MANUAL MODE -->
+                <div id="manualModeSection" style="display: none;">
+                    <div class="step-indicator">
+                        <div class="step active" id="manualStep1">
+                            <div class="step-number">1</div>
+                            <div class="step-text">Copy Prompt</div>
+                        </div>
+                        <div class="step" id="manualStep2">
+                            <div class="step-number">2</div>
+                            <div class="step-text">Paste to AI</div>
+                        </div>
+                        <div class="step" id="manualStep3">
+                            <div class="step-number">3</div>
+                            <div class="step-text">Submit Output</div>
+                        </div>
+                    </div>
+
+                    <div class="prompt-section" style="margin-bottom: 20px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <span style="color: var(--text-secondary);">📋 Copy this encrypted prompt to ChatGPT/Grok:</span>
+                            <button class="copy-btn" id="copyPromptBtn" onclick="copyEncryptedPrompt()" style="padding: 8px 16px; background: var(--neon-green); color: var(--bg-primary); border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                                📋 Copy Encrypted Prompt
+                            </button>
+                        </div>
+                        <div id="encryptedPromptBox" style="background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 10px; padding: 15px; font-family: monospace; font-size: 11px; color: var(--text-muted); word-break: break-all; max-height: 80px; overflow-y: auto;">
+                            Loading encrypted prompt...
+                        </div>
+                    </div>
+
+                    <div class="response-section">
+                        <textarea 
+                            class="response-input" 
+                            id="manualJsonInput" 
+                            placeholder="Paste the JSON output from ChatGPT/Grok here...
+
+The AI will output a JSON object with 28 scores. Paste that entire JSON here."
+                            oninput="handleManualInput()"
+                        ></textarea>
+                    </div>
+                </div>
+
+                <!-- SHARED: Username + Submit -->
                 <div class="username-section">
                     <input 
                         type="text" 
@@ -1078,18 +1133,6 @@ User: Can you explain it simpler?
                         maxlength="20"
                     >
                 </div>
-
-                <!-- Turnstile Anti-Bot -->
-                <div class="turnstile-container" style="display: flex; justify-content: center; margin: 15px 0;">
-                    <div class="cf-turnstile" 
-                         data-sitekey="YOUR_TURNSTILE_SITE_KEY" 
-                         data-callback="onTurnstileSuccess"
-                         data-theme="dark">
-                    </div>
-                </div>
-                <p id="turnstileStatus" style="text-align: center; font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">
-                    Complete the verification above to continue
-                </p>
 
                 <button class="submit-btn" id="submitBtn" onclick="submitTest()" disabled>
                     <span>🧠</span> Reveal My IQ
@@ -1357,146 +1400,223 @@ User: Can you explain it simpler?
             processResult(75);
         }
 
-        // ===== RESPONSE HANDLING =====
-        function handleResponseInput() {
-            const transcript = document.getElementById('responseInput').value;
-            const username = document.getElementById('usernameInput').value;
+        // ===== MODE SWITCHING =====
+        let currentMode = 'auto';
+        let encryptedPrompt = '';
+        
+        function switchMode(mode) {
+            currentMode = mode;
             
-            // Check if transcript is long enough (at least 50 chars)
-            const isValidTranscript = transcript.trim().length >= 50;
-            const hasUsername = username.trim().length >= 2;
-            // Turnstile is optional for now
-            const hasTurnstile = true; // !!turnstileToken;
+            // Update tab styles
+            document.getElementById('autoTab').style.background = mode === 'auto' ? 'var(--neon-green)' : 'var(--bg-card)';
+            document.getElementById('autoTab').style.color = mode === 'auto' ? 'var(--bg-primary)' : 'var(--text-primary)';
+            document.getElementById('manualTab').style.background = mode === 'manual' ? 'var(--neon-green)' : 'var(--bg-card)';
+            document.getElementById('manualTab').style.color = mode === 'manual' ? 'var(--bg-primary)' : 'var(--text-primary)';
             
-            document.getElementById('submitBtn').disabled = !(isValidTranscript && hasUsername && hasTurnstile);
+            // Show/hide sections
+            document.getElementById('autoModeSection').style.display = mode === 'auto' ? 'block' : 'none';
+            document.getElementById('manualModeSection').style.display = mode === 'manual' ? 'block' : 'none';
             
-            if (isValidTranscript) {
-                document.getElementById('step1').classList.remove('active');
-                document.getElementById('step1').classList.add('completed');
-                document.getElementById('step2').classList.add('active');
-                document.getElementById('step2').classList.add('completed');
-                document.getElementById('step3').classList.add('active');
+            // Generate encrypted prompt for manual mode
+            if (mode === 'manual') {
+                generateEncryptedPrompt();
+            }
+            
+            validateSubmitButton();
+        }
+        
+        async function generateEncryptedPrompt() {
+            const nonce = sessionStorage.getItem('wtd_nonce');
+            const timestamp = sessionStorage.getItem('wtd_timestamp');
+            
+            if (!nonce || !timestamp) {
+                document.getElementById('encryptedPromptBox').textContent = 'Error: No session. Refresh the page.';
+                return;
+            }
+            
+            try {
+                const res = await fetch(`${CONFIG.apiBase}/prompt?nonce=${nonce}&timestamp=${timestamp}`);
+                const data = await res.json();
+                
+                if (data.ok) {
+                    encryptedPrompt = data.prompt;
+                    document.getElementById('encryptedPromptBox').textContent = encryptedPrompt;
+                } else {
+                    document.getElementById('encryptedPromptBox').textContent = 'Error loading prompt. Refresh.';
+                }
+            } catch (e) {
+                // Fallback: generate locally
+                const promptText = `Decode this base64 and follow the instructions:\n\n${btoa(`DNA_PROFILE_ANALYZER v2.2\nNONCE: ${nonce}\nTIMESTAMP: ${timestamp}\nOutput strict JSON with 28 categories scored 0-100 with 4 decimals. All decimal digits must sum to same check digit.`)}`;
+                encryptedPrompt = btoa(promptText);
+                document.getElementById('encryptedPromptBox').textContent = encryptedPrompt;
             }
         }
         
+        function copyEncryptedPrompt() {
+            if (!encryptedPrompt) {
+                showToast('⚠️ No prompt to copy. Wait for it to load.');
+                return;
+            }
+            
+            // Decode and copy the actual prompt text
+            try {
+                const decoded = atob(encryptedPrompt);
+                navigator.clipboard.writeText(decoded).then(() => {
+                    const btn = document.getElementById('copyPromptBtn');
+                    btn.textContent = '✓ Copied!';
+                    btn.style.background = 'var(--neon-purple)';
+                    
+                    // Update steps
+                    document.getElementById('manualStep1').classList.add('completed');
+                    document.getElementById('manualStep2').classList.add('active');
+                    
+                    showToast('📋 Prompt copied! Paste it into ChatGPT/Grok now!');
+                    
+                    setTimeout(() => {
+                        btn.textContent = '📋 Copy Encrypted Prompt';
+                        btn.style.background = 'var(--neon-green)';
+                    }, 2000);
+                });
+            } catch (e) {
+                navigator.clipboard.writeText(encryptedPrompt);
+                showToast('📋 Copied!');
+            }
+        }
+
+        // ===== RESPONSE HANDLING =====
+        function handleAutoInput() {
+            const transcript = document.getElementById('transcriptInput').value;
+            const hasContent = transcript.trim().length >= 50;
+            
+            if (hasContent) {
+                document.getElementById('autoStep1').classList.add('completed');
+                document.getElementById('autoStep2').classList.add('active');
+            }
+            
+            validateSubmitButton();
+        }
+        
+        function handleManualInput() {
+            const jsonInput = document.getElementById('manualJsonInput').value;
+            const hasContent = jsonInput.trim().length >= 100;
+            
+            if (hasContent) {
+                document.getElementById('manualStep2').classList.add('completed');
+                document.getElementById('manualStep3').classList.add('active');
+            }
+            
+            validateSubmitButton();
+        }
+        
         function validateSubmitButton() {
-            const transcript = document.getElementById('responseInput').value;
-            const username = document.getElementById('usernameInput').value;
-            const isValidTranscript = transcript.trim().length >= 50;
-            const hasUsername = username.trim().length >= 2;
-            // Turnstile optional for now
-            const hasTurnstile = true;
-            document.getElementById('submitBtn').disabled = !(isValidTranscript && hasUsername && hasTurnstile);
+            const username = document.getElementById('usernameInput').value.trim();
+            const hasUsername = username.length >= 2;
+            
+            let hasContent = false;
+            if (currentMode === 'auto') {
+                const transcript = document.getElementById('transcriptInput')?.value || '';
+                hasContent = transcript.trim().length >= 50;
+            } else {
+                const jsonInput = document.getElementById('manualJsonInput')?.value || '';
+                hasContent = jsonInput.trim().length >= 100;
+            }
+            
+            document.getElementById('submitBtn').disabled = !(hasContent && hasUsername);
         }
 
         async function submitTest() {
             if (hasSubmitted) return;
-            
-            // Check Turnstile (optional for now)
-            // if (!turnstileToken) {
-            //     showToast('⚠️ Complete the verification first, dumbass.');
-            //     return;
-            // }
-            
             hasSubmitted = true;
             clearInterval(timerInterval);
             
-            const transcript = document.getElementById('responseInput').value.trim();
             const username = document.getElementById('usernameInput').value.trim();
-            
-            if (!transcript || transcript.length < 50) {
-                showToast('⚠️ Paste a longer conversation transcript, dumbass.');
-                hasSubmitted = false;
-                return;
-            }
-            
-            // Show loading state
             const submitBtn = document.getElementById('submitBtn');
-            submitBtn.innerHTML = '<span>⏳</span> AI Analyzing...';
+            submitBtn.innerHTML = '<span>⏳</span> Processing...';
             submitBtn.disabled = true;
             
             let iq = null;
             let sealedToken = null;
             
+            const nonce = sessionStorage.getItem('wtd_nonce');
+            const timestamp = parseInt(sessionStorage.getItem('wtd_timestamp'));
+            
+            if (!nonce) {
+                showToast('⚠️ Session expired. Refresh the page.');
+                hasSubmitted = false;
+                return;
+            }
+            
             try {
-                // Get stored nonce/timestamp
-                const nonce = sessionStorage.getItem('wtd_nonce');
-                const timestamp = parseInt(sessionStorage.getItem('wtd_timestamp'));
-                
-                if (!nonce) {
-                    throw new Error('No nonce found - session expired');
-                }
-                
-                showToast('🧠 AI is analyzing your conversation...');
-                
-                // Send transcript to backend - it calls ChatGPT + signs
-                const analyzeRes = await fetch(`${CONFIG.apiBase}/analyze`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        nonce,
-                        timestamp,
-                        transcript,
-                        turnstile_token: turnstileToken || null
-                    })
-                });
-                
-                const analyzeData = await analyzeRes.json();
-                
-                if (analyzeData.ok) {
-                    // Success! Server analyzed, validated, and signed
-                    sealedToken = analyzeData.token;
-                    const profile = analyzeData.profile?.profile || analyzeData.profile;
+                if (currentMode === 'auto') {
+                    // AUTO MODE: Send transcript, server calls ChatGPT
+                    const transcript = document.getElementById('transcriptInput').value.trim();
+                    showToast('🧠 AI is analyzing your conversation...');
                     
-                    // Calculate IQ from profile scores
-                    if (profile) {
-                        const scoreValues = Object.values(profile).filter(v => typeof v === 'number');
-                        const avgScore = scoreValues.reduce((a, b) => a + b, 0) / scoreValues.length;
-                        iq = Math.round(70 + (avgScore * 0.9));
-                        iq = Math.min(160, Math.max(70, iq));
+                    const res = await fetch(`${CONFIG.apiBase}/analyze`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ nonce, timestamp, transcript, turnstile_token: null })
+                    });
+                    
+                    const data = await res.json();
+                    
+                    if (data.ok) {
+                        sealedToken = data.token;
+                        iq = data.iq || calculateLocalIQ(data.profile?.profile || data.profile);
+                        showToast('🧠 Analysis complete!');
                     } else {
-                        iq = 100;
+                        throw new Error(data.error);
                     }
                     
-                    console.log('✅ Analysis complete!');
-                    console.log('IQ:', iq);
-                    console.log('Token:', sealedToken);
-                    
-                    showToast('🧠 Analysis complete!');
                 } else {
-                    // Analysis failed
-                    console.error('Analysis failed:', analyzeData.error);
+                    // MANUAL MODE: User pasted JSON from ChatGPT
+                    const jsonInput = document.getElementById('manualJsonInput').value.trim();
+                    showToast('🔐 Verifying and signing...');
                     
-                    if (analyzeData.error === 'nonce_expired') {
-                        showToast('⏰ Time expired! Refresh and try again.');
-                    } else if (analyzeData.error === 'nonce_invalid') {
-                        showToast('⚠️ Session expired. Refresh the page.');
-                    } else if (analyzeData.error === 'bot_suspected') {
-                        showToast('🤖 Bot detected! Are you even human?');
-                    } else if (analyzeData.error === 'llm_api_error') {
-                        showToast('⚠️ AI is busy. Try again in a moment.');
+                    const res = await fetch(`${CONFIG.apiBase}/verify`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ nonce, timestamp, profile_json: jsonInput, turnstile_token: null })
+                    });
+                    
+                    const data = await res.json();
+                    
+                    if (data.ok) {
+                        sealedToken = data.token;
+                        iq = data.iq || calculateLocalIQ(data.profile?.profile || data.profile);
+                        showToast('✅ Verified and signed!');
                     } else {
-                        showToast(`⚠️ Error: ${analyzeData.error}`);
+                        if (data.error === 'check_digit_mismatch') {
+                            showToast('🚨 TAMPER DETECTED! Nice try, dumbass.');
+                        } else if (data.error === 'nonce_mismatch') {
+                            showToast('⚠️ Wrong nonce in JSON. Copy the prompt again.');
+                        } else {
+                            showToast(`⚠️ Verification failed: ${data.error}`);
+                        }
+                        throw new Error(data.error);
                     }
-                    
-                    iq = 70 + Math.floor(Math.random() * 15);
                 }
                 
             } catch (e) {
                 console.error('Submit error:', e);
-                showToast('⚠️ Network error. Check your connection.');
-                iq = 70 + Math.floor(Math.random() * 20);
+                if (!iq) iq = 70 + Math.floor(Math.random() * 20);
             }
             
-            // Save to localStorage
+            // Save results
             localStorage.setItem('wtd_iq_score', iq.toString());
             localStorage.setItem('wtd_username', username);
             localStorage.setItem('wtd_timestamp', Date.now().toString());
-            if (sealedToken) {
-                localStorage.setItem('wtd_sealed_token', sealedToken);
-            }
+            if (sealedToken) localStorage.setItem('wtd_sealed_token', sealedToken);
             
             processResult(iq, username);
+        }
+        
+        function calculateLocalIQ(profile) {
+            if (!profile) return 100;
+            const values = Object.values(profile).filter(v => typeof v === 'number');
+            if (values.length === 0) return 100;
+            const avg = values.reduce((a, b) => a + b, 0) / values.length;
+            return Math.min(160, Math.max(70, Math.round(70 + avg * 0.9)));
         }
 
         function processResult(iq, username = 'Anonymous') {
