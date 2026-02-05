@@ -1043,34 +1043,33 @@
                 <div class="step-indicator">
                     <div class="step active" id="step1">
                         <div class="step-number">1</div>
-                        <div class="step-text">Paste Conversation</div>
+                        <div class="step-text">Enter Chat</div>
                     </div>
                     <div class="step" id="step2">
                         <div class="step-number">2</div>
-                        <div class="step-text">Copy & Run</div>
+                        <div class="step-text">Copy Prompt</div>
                     </div>
                     <div class="step" id="step3">
                         <div class="step-number">3</div>
-                        <div class="step-text">Verify</div>
+                        <div class="step-text">Get Score</div>
                     </div>
                 </div>
 
                 <!-- Step 1: Paste your conversation -->
                 <div id="step1Section">
-                    <p style="color: var(--text-secondary); margin-bottom: 10px;">Paste your AI conversation (ChatGPT, Claude, Gemini, etc):</p>
-                    <div class="response-section" style="position: relative;">
+                    <p style="color: var(--text-secondary); margin-bottom: 10px;">Paste your AI conversation below (Ctrl+V / Cmd+V):</p>
+                    <div class="response-section">
                         <textarea 
                             class="response-input" 
                             id="transcriptInput" 
-                            placeholder="Click PASTE or Ctrl+V / Cmd+V to paste your conversation here..."
+                            placeholder="Paste your conversation here (Ctrl+V / Cmd+V)..."
                             oninput="handleTranscriptInput()"
                             style="min-height: 150px;"
                         ></textarea>
-                        <button onclick="pasteTranscript()" style="position: absolute; top: 10px; right: 10px; padding: 8px 16px; background: var(--neon-green); color: #000; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.9rem;">📋 PASTE</button>
                     </div>
                     
                     <button class="submit-btn" id="generateBtn" onclick="generatePrompt()" disabled style="background: linear-gradient(135deg, var(--neon-green), var(--neon-blue));">
-                        <span>📋</span> GENERATE & COPY PROMPT
+                        <span>📋</span> COPY PROMPT
                     </button>
                 </div>
                 
