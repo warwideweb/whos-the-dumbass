@@ -1619,8 +1619,9 @@
                     showToast('✅ Verified! Your DNA2 token is ready.');
                     clearInterval(challengeTimer);
                     
-                    // Store the DNA2 token
+                    // Store the DNA2 token and user ID
                     localStorage.setItem('wtd_dna2', dna2Token);
+                    if (data.userId) localStorage.setItem('wtd_user_id', data.userId);
                 } else {
                     let errMsg = data.error || 'Verification failed';
                     const detail = data.detail ? `: ${data.detail}` : '';
@@ -1741,7 +1742,7 @@
             });
         }
         
-        function saveUserUrl() {
+        async function saveUserUrl() {
             let url = document.getElementById('userUrlInput').value.trim();
             if (!url) {
                 showToast('❌ Enter a URL first');
@@ -1758,13 +1759,34 @@
                 showToast('❌ Invalid URL format');
                 return;
             }
-            // Save to localStorage
-            localStorage.setItem('wtd_user_url', url);
-            showToast('✅ URL saved! It will show on the leaderboard.');
-            // Update leaderboard display
-            const username = localStorage.getItem('wtd_username') || 'Anonymous';
-            const iq = parseInt(localStorage.getItem('wtd_iq_score') || '0');
-            addToLeaderboard(username, iq, url);
+            
+            // Get user ID from localStorage
+            const userId = localStorage.getItem('wtd_user_id');
+            if (!userId) {
+                showToast('❌ User ID not found. Take the test first!');
+                return;
+            }
+            
+            // Save to backend
+            try {
+                const res = await fetch(`${CONFIG.apiBase}/save-link`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId, link: url })
+                });
+                const data = await res.json();
+                
+                if (data.ok) {
+                    localStorage.setItem('wtd_user_url', url);
+                    showToast('✅ Link saved! Visible on leaderboard.');
+                    loadLeaderboard(); // Refresh leaderboard
+                } else {
+                    showToast(`❌ ${data.message || data.error || 'Failed to save'}`);
+                }
+            } catch (e) {
+                console.error('Save link error:', e);
+                showToast('❌ Failed to save link. Try again.');
+            }
         }
         
         function resetTest() {
@@ -1774,6 +1796,8 @@
             localStorage.removeItem('wtd_timestamp');
             localStorage.removeItem('wtd_sealed_token');
             localStorage.removeItem('wtd_user_url');
+            localStorage.removeItem('wtd_user_id');
+            localStorage.removeItem('wtd_dna2');
             
             // Reset state
             hasSubmitted = false;
@@ -1900,12 +1924,15 @@
             
             // Links
             let linksHtml = '';
-            if (user.iq >= 140 && user.links) {
-                linksHtml = `<a href="https://${user.links}" target="_blank">🔗 ${user.links.split('/')[0]}</a>`;
+            if (user.iq >= 140 && user.link) {
+                // Handle link with or without protocol
+                const href = user.link.startsWith('http') ? user.link : `https://${user.link}`;
+                const displayText = user.link.replace(/^https?:\/\//, '').split('/')[0];
+                linksHtml = `<a href="${href}" target="_blank" rel="noopener">🔗 ${displayText}</a>`;
             } else if (user.iq < 140) {
                 linksHtml = `<span class="too-stupid">TOO STUPID FOR LINKS</span>`;
             } else {
-                linksHtml = `<span style="color: var(--text-muted)">No links</span>`;
+                linksHtml = `<span style="color: var(--text-muted)">—</span>`;
             }
             
             // Boost
