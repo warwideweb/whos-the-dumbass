@@ -1110,6 +1110,37 @@
                     <div class="iq-number pending" id="iqNumber">???</div>
                     <div class="iq-label">YOUR IQ SCORE</div>
                     <div class="iq-verdict" id="iqVerdict">Take the test to find out...</div>
+                    <a href="#testSection" id="takeTestCta" onclick="smoothScrollToTest(event)" style="display: inline-block; margin-top: 20px; padding: 12px 24px; background: linear-gradient(135deg, var(--neon-pink), var(--neon-purple)); color: white; text-decoration: none; border-radius: 10px; font-weight: 600; cursor: pointer; transition: all 0.3s ease;">
+                        👇 Take The Test
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Leaderboard (moved above test) -->
+        <section class="leaderboard-section">
+            <div class="container">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <span>🏆</span> Global IQ Leaderboard
+                    </h2>
+                    <div class="live-indicator">
+                        <div class="live-dot"></div>
+                        <span>LIVE</span>
+                    </div>
+                </div>
+
+                <div class="leaderboard">
+                    <div class="leaderboard-header">
+                        <div>Rank</div>
+                        <div>User</div>
+                        <div>IQ</div>
+                        <div class="links-col">Links</div>
+                        <div class="boost-col">Boost</div>
+                    </div>
+                    <div class="leaderboard-body" id="leaderboardBody">
+                        <!-- Populated by JS -->
+                    </div>
                 </div>
             </div>
         </section>
@@ -1218,34 +1249,6 @@
             </div>
         </section>
 
-        <!-- Leaderboard -->
-        <section class="leaderboard-section">
-            <div class="container">
-                <div class="section-header">
-                    <h2 class="section-title">
-                        <span>🏆</span> Global IQ Leaderboard
-                    </h2>
-                    <div class="live-indicator">
-                        <div class="live-dot"></div>
-                        <span>LIVE</span>
-                    </div>
-                </div>
-
-                <div class="leaderboard">
-                    <div class="leaderboard-header">
-                        <div>Rank</div>
-                        <div>User</div>
-                        <div>IQ</div>
-                        <div class="links-col">Links</div>
-                        <div class="boost-col">Boost</div>
-                    </div>
-                    <div class="leaderboard-body" id="leaderboardBody">
-                        <!-- Populated by JS -->
-                    </div>
-                </div>
-            </div>
-        </section>
-
         <!-- Payment Section -->
         <section class="container">
             <div class="payment-section">
@@ -1337,6 +1340,19 @@
 
     <div class="toast" id="toast"></div>
 
+    <!-- 140+ Link Posting Popup -->
+    <div id="linkPopupOverlay" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 2000; align-items: center; justify-content: center;">
+        <div id="linkPopupContent" style="background: var(--bg-card); border: 2px solid var(--neon-purple); border-radius: 20px; padding: 40px; max-width: 450px; text-align: center; position: relative;">
+            <h3 id="linkPopupTitle" style="font-size: 1.5rem; margin-bottom: 16px; color: var(--neon-green);">🎉 You're not that big of a dumbass.</h3>
+            <p id="linkPopupBody" style="color: var(--text-secondary); margin-bottom: 24px;">You unlocked link posting. Add your link to the leaderboard.</p>
+            <div id="linkInputSection">
+                <input type="text" id="linkPopupInput" placeholder="https://twitter.com/yourhandle" style="width: 100%; padding: 14px 18px; background: var(--bg-primary); border: 2px solid var(--border-color); border-radius: 10px; color: var(--text-primary); font-size: 1rem; margin-bottom: 16px;">
+                <button onclick="saveLinkFromPopup()" style="width: 100%; padding: 14px; background: var(--neon-green); color: var(--bg-primary); border: none; border-radius: 10px; font-weight: 700; font-size: 1rem; cursor: pointer;">Save Link</button>
+            </div>
+            <button onclick="closePopup()" style="position: absolute; top: 16px; right: 16px; background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer;">✕</button>
+        </div>
+    </div>
+
     <script>
         // ===== CONFIGURATION =====
         const CONFIG = {
@@ -1399,8 +1415,21 @@
             document.getElementById('alreadyTested').style.display = 'block';
             document.getElementById('lockedScore').textContent = score;
             
+            // Hide the CTA button
+            document.getElementById('takeTestCta').style.display = 'none';
+            
             // Update IQ display
             updateIQDisplay(parseInt(score));
+            
+            // Show DNA2 token if available
+            const dna2Token = localStorage.getItem('wtd_dna2');
+            if (dna2Token) {
+                const tokenSection = document.getElementById('dna2TokenSection');
+                if (tokenSection) {
+                    tokenSection.style.display = 'block';
+                    document.getElementById('dna2TokenDisplay').textContent = dna2Token;
+                }
+            }
         }
 
         // ===== COPY FUNCTIONALITY =====
@@ -1586,7 +1615,7 @@
                 
                 if (data.ok) {
                     dna2Token = data.dna2;
-                    iq = data.iq;
+                    iq = data.iq_score;
                     showToast('✅ Verified! Your DNA2 token is ready.');
                     clearInterval(challengeTimer);
                     
@@ -1653,6 +1682,9 @@
             // Update display
             updateIQDisplay(iq);
             
+            // Hide the CTA button
+            document.getElementById('takeTestCta').style.display = 'none';
+            
             // Add to leaderboard
             addToLeaderboard(username, iq);
             
@@ -1677,27 +1709,26 @@
             if (iq >= 140) {
                 titleEl.textContent = '🧠 CERTIFIED GENIUS!';
                 titleEl.style.color = 'var(--neon-green)';
-                msgEl.textContent = 'Wow. You\'re actually smart. Add your link to flex on the leaderboard.';
-                // Show glowing URL input
-                document.getElementById('highIQUrlSection').style.display = 'block';
-                showToast('🎉 GENIUS! IQ 140+! Add your link to the leaderboard!');
+                msgEl.textContent = 'Wow. You\'re actually smart. IQ 140+ unlocks link posting!';
                 triggerConfetti();
+                // Show popup after a short delay
+                setTimeout(() => showLinkPopup(iq), 500);
             } else if (iq >= 130) {
                 titleEl.textContent = '🎉 SMART!';
                 titleEl.style.color = 'var(--neon-green)';
                 msgEl.textContent = 'You\'re actually smart. Not quite genius, but close.';
-                showToast('🎉 GENIUS DETECTED! You\'re actually smart!');
                 triggerConfetti();
+                setTimeout(() => showLinkPopup(iq), 500);
             } else if (iq >= 100) {
                 titleEl.textContent = '😐 AVERAGE';
                 titleEl.style.color = 'var(--neon-yellow)';
                 msgEl.textContent = 'You\'re... fine. Average. Mediocre. Nothing special.';
-                showToast('😐 You\'re... fine. Average. Mediocre.');
+                setTimeout(() => showLinkPopup(iq), 500);
             } else {
                 titleEl.textContent = '💀 DUMBASS CONFIRMED';
                 titleEl.style.color = 'var(--neon-red)';
                 msgEl.textContent = 'Congratulations! You\'re officially the dumbass.';
-                showToast('💀 DUMBASS CONFIRMED! We have a winner!');
+                setTimeout(() => showLinkPopup(iq), 500);
             }
         }
         
@@ -2066,6 +2097,66 @@
                 const currentTests = parseInt(testsEl.textContent.replace(',', ''));
                 testsEl.textContent = (currentTests + Math.floor(Math.random() * 3)).toLocaleString();
             }, 5000);
+        }
+
+        // ===== SMOOTH SCROLL =====
+        function smoothScrollToTest(event) {
+            event.preventDefault();
+            document.getElementById('testSection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // ===== LINK POPUP (140+) =====
+        function showLinkPopup(iq) {
+            const overlay = document.getElementById('linkPopupOverlay');
+            const title = document.getElementById('linkPopupTitle');
+            const body = document.getElementById('linkPopupBody');
+            const inputSection = document.getElementById('linkInputSection');
+            
+            if (iq >= 140) {
+                title.textContent = "🎉 You're not that big of a dumbass.";
+                title.style.color = 'var(--neon-green)';
+                body.textContent = "You unlocked link posting. Add your link to the leaderboard.";
+                inputSection.style.display = 'block';
+            } else {
+                title.textContent = "❌ Nope.";
+                title.style.color = 'var(--neon-red)';
+                body.textContent = "You didn't unlock link posting. Score 140+ to post a link.";
+                inputSection.style.display = 'none';
+            }
+            
+            overlay.style.display = 'flex';
+        }
+
+        function saveLinkFromPopup() {
+            let url = document.getElementById('linkPopupInput').value.trim();
+            if (!url) {
+                showToast('❌ Enter a URL first');
+                return;
+            }
+            // Add https:// if missing
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                url = 'https://' + url;
+            }
+            // Validate
+            try {
+                new URL(url);
+            } catch {
+                showToast('❌ Invalid URL format');
+                return;
+            }
+            
+            localStorage.setItem('wtd_user_url', url);
+            showToast('✅ Link saved! It will show on the leaderboard.');
+            closePopup();
+            
+            // Update leaderboard
+            const username = localStorage.getItem('wtd_username') || 'Anonymous';
+            const iq = parseInt(localStorage.getItem('wtd_iq_score') || '0');
+            addToLeaderboard(username, iq, url);
+        }
+
+        function closePopup() {
+            document.getElementById('linkPopupOverlay').style.display = 'none';
         }
 
         // ===== TOAST =====
