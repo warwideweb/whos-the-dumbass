@@ -1034,93 +1034,50 @@
             <div class="test-section" id="testSection">
                 <h2>🎯 Take The Test</h2>
                 
-                <!-- Mode Tabs -->
-                <div class="mode-tabs" style="display: flex; justify-content: center; gap: 10px; margin-bottom: 25px;">
-                    <button class="mode-tab active" id="autoTab" onclick="switchMode('auto')" style="padding: 12px 30px; background: var(--neon-green); color: var(--bg-primary); border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
-                        ⚡ Auto Mode
-                    </button>
-                    <button class="mode-tab" id="manualTab" onclick="switchMode('manual')" style="padding: 12px 30px; background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 8px; font-weight: 600; cursor: pointer;">
-                        🔧 Manual Mode
-                    </button>
-                </div>
-
                 <div class="timer-container" id="timerContainer">
                     <div class="timer" id="timer">2:00</div>
-                    <div class="timer-label">⏱️ Nonce expires — Submit before timeout!</div>
+                    <div class="timer-label">⏱️ Session expires — Complete before timeout!</div>
                 </div>
 
-                <!-- AUTO MODE -->
-                <div id="autoModeSection">
-                    <div class="step-indicator">
-                        <div class="step active" id="autoStep1">
-                            <div class="step-number">1</div>
-                            <div class="step-text">Paste Transcript</div>
-                        </div>
-                        <div class="step" id="autoStep2">
-                            <div class="step-number">2</div>
-                            <div class="step-text">AI Analyzes</div>
-                        </div>
-                        <div class="step" id="autoStep3">
-                            <div class="step-number">3</div>
-                            <div class="step-text">Get Results</div>
-                        </div>
+                <div class="step-indicator">
+                    <div class="step active" id="step1">
+                        <div class="step-number">1</div>
+                        <div class="step-text">Copy Code</div>
                     </div>
-
-                    <div class="response-section">
-                        <textarea 
-                            class="response-input" 
-                            id="transcriptInput" 
-                            placeholder="Paste your ChatGPT conversation transcript here...
-
-Example:
-User: What is quantum physics?
-Assistant: Quantum physics is a branch of physics...
-User: Can you explain it simpler?
-..."
-                            oninput="handleAutoInput()"
-                        ></textarea>
+                    <div class="step" id="step2">
+                        <div class="step-number">2</div>
+                        <div class="step-text">Run in AI</div>
+                    </div>
+                    <div class="step" id="step3">
+                        <div class="step-number">3</div>
+                        <div class="step-text">Paste Result</div>
                     </div>
                 </div>
 
-                <!-- MANUAL MODE -->
-                <div id="manualModeSection" style="display: none;">
-                    <div class="step-indicator">
-                        <div class="step active" id="manualStep1">
-                            <div class="step-number">1</div>
-                            <div class="step-text">Copy Prompt</div>
-                        </div>
-                        <div class="step" id="manualStep2">
-                            <div class="step-number">2</div>
-                            <div class="step-text">Paste to AI</div>
-                        </div>
-                        <div class="step" id="manualStep3">
-                            <div class="step-number">3</div>
-                            <div class="step-text">Submit Output</div>
-                        </div>
+                <!-- Step 1: Copy Analysis Code -->
+                <div class="prompt-section" style="margin-bottom: 25px;">
+                    <div style="text-align: center; margin-bottom: 15px;">
+                        <button class="copy-btn" id="copyCodeBtn" onclick="copyAnalysisCode()" style="padding: 15px 40px; background: linear-gradient(135deg, var(--neon-green), var(--neon-blue)); color: var(--bg-primary); border: none; border-radius: 10px; font-weight: 700; font-size: 1.1rem; cursor: pointer; transition: all 0.3s;">
+                            📋 Copy Analysis Code
+                        </button>
                     </div>
+                    <p style="text-align: center; color: var(--text-muted); font-size: 0.85rem;">
+                        Copy this code and paste it into ChatGPT, Grok, or Claude.<br>
+                        The AI will analyze your conversation and output a JSON result.
+                    </p>
+                </div>
 
-                    <div class="prompt-section" style="margin-bottom: 20px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                            <span style="color: var(--text-secondary);">📋 Copy this encrypted prompt to ChatGPT/Grok:</span>
-                            <button class="copy-btn" id="copyPromptBtn" onclick="copyEncryptedPrompt()" style="padding: 8px 16px; background: var(--neon-green); color: var(--bg-primary); border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
-                                📋 Copy Encrypted Prompt
-                            </button>
-                        </div>
-                        <div id="encryptedPromptBox" style="background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 10px; padding: 15px; font-family: monospace; font-size: 11px; color: var(--text-muted); word-break: break-all; max-height: 80px; overflow-y: auto;">
-                            Loading encrypted prompt...
-                        </div>
-                    </div>
+                <!-- Step 2: Paste JSON Result -->
+                <div class="response-section">
+                    <textarea 
+                        class="response-input" 
+                        id="jsonResultInput" 
+                        placeholder="Paste the JSON output from the AI here...
 
-                    <div class="response-section">
-                        <textarea 
-                            class="response-input" 
-                            id="manualJsonInput" 
-                            placeholder="Paste the JSON output from ChatGPT/Grok here...
-
-The AI will output a JSON object with 28 scores. Paste that entire JSON here."
-                            oninput="handleManualInput()"
-                        ></textarea>
-                    </div>
+After running the analysis code in ChatGPT/Grok, the AI will output a JSON object.
+Copy that entire JSON and paste it here."
+                        oninput="handleJsonInput()"
+                    ></textarea>
                 </div>
 
                 <!-- SHARED: Username + Submit -->
@@ -1400,109 +1357,82 @@ The AI will output a JSON object with 28 scores. Paste that entire JSON here."
             processResult(75);
         }
 
-        // ===== MODE SWITCHING =====
-        let currentMode = 'auto';
-        let encryptedPrompt = '';
+        // ===== ANALYSIS CODE GENERATION =====
         
-        function switchMode(mode) {
-            currentMode = mode;
-            
-            // Update tab styles
-            document.getElementById('autoTab').style.background = mode === 'auto' ? 'var(--neon-green)' : 'var(--bg-card)';
-            document.getElementById('autoTab').style.color = mode === 'auto' ? 'var(--bg-primary)' : 'var(--text-primary)';
-            document.getElementById('manualTab').style.background = mode === 'manual' ? 'var(--neon-green)' : 'var(--bg-card)';
-            document.getElementById('manualTab').style.color = mode === 'manual' ? 'var(--bg-primary)' : 'var(--text-primary)';
-            
-            // Show/hide sections
-            document.getElementById('autoModeSection').style.display = mode === 'auto' ? 'block' : 'none';
-            document.getElementById('manualModeSection').style.display = mode === 'manual' ? 'block' : 'none';
-            
-            // Generate encrypted prompt for manual mode
-            if (mode === 'manual') {
-                generateEncryptedPrompt();
-            }
-            
-            validateSubmitButton();
-        }
-        
-        async function generateEncryptedPrompt() {
+        function generateAnalysisCode() {
             const nonce = sessionStorage.getItem('wtd_nonce');
             const timestamp = sessionStorage.getItem('wtd_timestamp');
             
-            if (!nonce || !timestamp) {
-                document.getElementById('encryptedPromptBox').textContent = 'Error: No session. Refresh the page.';
-                return;
-            }
+            if (!nonce || !timestamp) return null;
             
-            try {
-                const res = await fetch(`${CONFIG.apiBase}/prompt?nonce=${nonce}&timestamp=${timestamp}`);
-                const data = await res.json();
-                
-                if (data.ok) {
-                    encryptedPrompt = data.prompt;
-                    document.getElementById('encryptedPromptBox').textContent = encryptedPrompt;
-                } else {
-                    document.getElementById('encryptedPromptBox').textContent = 'Error loading prompt. Refresh.';
-                }
-            } catch (e) {
-                // Fallback: generate locally
-                const promptText = `Decode this base64 and follow the instructions:\n\n${btoa(`DNA_PROFILE_ANALYZER v2.2\nNONCE: ${nonce}\nTIMESTAMP: ${timestamp}\nOutput strict JSON with 28 categories scored 0-100 with 4 decimals. All decimal digits must sum to same check digit.`)}`;
-                encryptedPrompt = btoa(promptText);
-                document.getElementById('encryptedPromptBox').textContent = encryptedPrompt;
-            }
+            // Create the analysis code - encoded so users can't easily read/modify it
+            // The AI will decode and execute it
+            const codePayload = {
+                v: "2.2",
+                n: nonce,
+                t: timestamp,
+                c: [
+                    "logical_reasoning","pattern_recognition","verbal_comprehension","mathematical_ability",
+                    "spatial_reasoning","memory_recall","processing_speed","abstract_thinking","critical_analysis",
+                    "problem_decomposition","deductive_inductive_reasoning","systems_thinking","creative_problem_solving",
+                    "knowledge_integration","deep_thinking","critical_thinking","building","electronics","software",
+                    "communication","creativity","analysis","leadership","research","problem_solving","technical_depth",
+                    "collaboration","innovation"
+                ]
+            };
+            
+            const encoded = btoa(JSON.stringify(codePayload));
+            
+            // Create the full prompt that the AI will process
+            return `WTD-ANALYZE::${encoded}
+
+[SYSTEM: Decode the above WTD-ANALYZE payload (base64 JSON). Extract nonce (n), timestamp (t), and categories (c). Analyze this entire conversation and score each category 0.0000-100.0000. CRITICAL: All scores must have 4 decimals where digit sum mod 10 equals same check digit D. Vary decimals. Output ONLY this JSON structure:]
+
+{
+  "nonce": "<from payload.n>",
+  "timestamp": "<from payload.t>",
+  "profile": { <each category from payload.c with XX.XXXX score> },
+  "context_messages": <count>,
+  "analysis_summary": "<1-3 sentences>"
+}`;
         }
         
-        function copyEncryptedPrompt() {
-            if (!encryptedPrompt) {
-                showToast('⚠️ No prompt to copy. Wait for it to load.');
+        function copyAnalysisCode() {
+            const code = generateAnalysisCode();
+            
+            if (!code) {
+                showToast('⚠️ Session expired. Refresh the page.');
                 return;
             }
             
-            // Decode and copy the actual prompt text
-            try {
-                const decoded = atob(encryptedPrompt);
-                navigator.clipboard.writeText(decoded).then(() => {
-                    const btn = document.getElementById('copyPromptBtn');
-                    btn.textContent = '✓ Copied!';
-                    btn.style.background = 'var(--neon-purple)';
-                    
-                    // Update steps
-                    document.getElementById('manualStep1').classList.add('completed');
-                    document.getElementById('manualStep2').classList.add('active');
-                    
-                    showToast('📋 Prompt copied! Paste it into ChatGPT/Grok now!');
-                    
-                    setTimeout(() => {
-                        btn.textContent = '📋 Copy Encrypted Prompt';
-                        btn.style.background = 'var(--neon-green)';
-                    }, 2000);
-                });
-            } catch (e) {
-                navigator.clipboard.writeText(encryptedPrompt);
-                showToast('📋 Copied!');
-            }
+            navigator.clipboard.writeText(code).then(() => {
+                const btn = document.getElementById('copyCodeBtn');
+                btn.innerHTML = '✓ Copied!';
+                btn.style.background = 'var(--neon-purple)';
+                
+                // Update steps
+                document.getElementById('step1').classList.add('completed');
+                document.getElementById('step1').classList.remove('active');
+                document.getElementById('step2').classList.add('active');
+                
+                showToast('📋 Code copied! Paste it into ChatGPT/Grok now!');
+                
+                setTimeout(() => {
+                    btn.innerHTML = '📋 Copy Analysis Code';
+                    btn.style.background = 'linear-gradient(135deg, var(--neon-green), var(--neon-blue))';
+                }, 2000);
+            });
         }
 
         // ===== RESPONSE HANDLING =====
-        function handleAutoInput() {
-            const transcript = document.getElementById('transcriptInput').value;
-            const hasContent = transcript.trim().length >= 50;
-            
-            if (hasContent) {
-                document.getElementById('autoStep1').classList.add('completed');
-                document.getElementById('autoStep2').classList.add('active');
-            }
-            
-            validateSubmitButton();
-        }
-        
-        function handleManualInput() {
-            const jsonInput = document.getElementById('manualJsonInput').value;
+        function handleJsonInput() {
+            const jsonInput = document.getElementById('jsonResultInput').value;
             const hasContent = jsonInput.trim().length >= 100;
             
             if (hasContent) {
-                document.getElementById('manualStep2').classList.add('completed');
-                document.getElementById('manualStep3').classList.add('active');
+                document.getElementById('step2').classList.add('completed');
+                document.getElementById('step2').classList.remove('active');
+                document.getElementById('step3').classList.add('active');
             }
             
             validateSubmitButton();
@@ -1511,17 +1441,10 @@ The AI will output a JSON object with 28 scores. Paste that entire JSON here."
         function validateSubmitButton() {
             const username = document.getElementById('usernameInput').value.trim();
             const hasUsername = username.length >= 2;
+            const jsonInput = document.getElementById('jsonResultInput')?.value || '';
+            const hasJson = jsonInput.trim().length >= 100;
             
-            let hasContent = false;
-            if (currentMode === 'auto') {
-                const transcript = document.getElementById('transcriptInput')?.value || '';
-                hasContent = transcript.trim().length >= 50;
-            } else {
-                const jsonInput = document.getElementById('manualJsonInput')?.value || '';
-                hasContent = jsonInput.trim().length >= 100;
-            }
-            
-            document.getElementById('submitBtn').disabled = !(hasContent && hasUsername);
+            document.getElementById('submitBtn').disabled = !(hasJson && hasUsername);
         }
 
         async function submitTest() {
@@ -1531,7 +1454,7 @@ The AI will output a JSON object with 28 scores. Paste that entire JSON here."
             
             const username = document.getElementById('usernameInput').value.trim();
             const submitBtn = document.getElementById('submitBtn');
-            submitBtn.innerHTML = '<span>⏳</span> Processing...';
+            submitBtn.innerHTML = '<span>⏳</span> Verifying...';
             submitBtn.disabled = true;
             
             let iq = null;
@@ -1543,63 +1466,49 @@ The AI will output a JSON object with 28 scores. Paste that entire JSON here."
             if (!nonce) {
                 showToast('⚠️ Session expired. Refresh the page.');
                 hasSubmitted = false;
+                submitBtn.innerHTML = '<span>🧠</span> Reveal My IQ';
                 return;
             }
             
             try {
-                if (currentMode === 'auto') {
-                    // AUTO MODE: Send transcript, server calls ChatGPT
-                    const transcript = document.getElementById('transcriptInput').value.trim();
-                    showToast('🧠 AI is analyzing your conversation...');
-                    
-                    const res = await fetch(`${CONFIG.apiBase}/analyze`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ nonce, timestamp, transcript, turnstile_token: null })
-                    });
-                    
-                    const data = await res.json();
-                    
-                    if (data.ok) {
-                        sealedToken = data.token;
-                        iq = data.iq || calculateLocalIQ(data.profile?.profile || data.profile);
-                        showToast('🧠 Analysis complete!');
-                    } else {
-                        throw new Error(data.error);
-                    }
-                    
+                const jsonInput = document.getElementById('jsonResultInput').value.trim();
+                showToast('🔐 Verifying and signing...');
+                
+                const res = await fetch(`${CONFIG.apiBase}/verify`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nonce, timestamp, profile_json: jsonInput, turnstile_token: null })
+                });
+                
+                const data = await res.json();
+                
+                if (data.ok) {
+                    sealedToken = data.token;
+                    iq = data.iq || calculateLocalIQ(data.profile?.profile || data.profile);
+                    showToast('✅ Verified and signed!');
                 } else {
-                    // MANUAL MODE: User pasted JSON from ChatGPT
-                    const jsonInput = document.getElementById('manualJsonInput').value.trim();
-                    showToast('🔐 Verifying and signing...');
-                    
-                    const res = await fetch(`${CONFIG.apiBase}/verify`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ nonce, timestamp, profile_json: jsonInput, turnstile_token: null })
-                    });
-                    
-                    const data = await res.json();
-                    
-                    if (data.ok) {
-                        sealedToken = data.token;
-                        iq = data.iq || calculateLocalIQ(data.profile?.profile || data.profile);
-                        showToast('✅ Verified and signed!');
+                    if (data.error === 'check_digit_mismatch') {
+                        showToast('🚨 TAMPER DETECTED! The scores were modified. Nice try, dumbass.');
+                    } else if (data.error === 'nonce_mismatch' || data.error === 'nonce_invalid') {
+                        showToast('⚠️ Invalid session. Refresh and try again.');
+                    } else if (data.error === 'nonce_expired') {
+                        showToast('⏰ Session expired. Refresh and try again.');
+                    } else if (data.error.includes('missing_key')) {
+                        showToast('⚠️ Missing score categories. Use the full analysis code.');
                     } else {
-                        if (data.error === 'check_digit_mismatch') {
-                            showToast('🚨 TAMPER DETECTED! Nice try, dumbass.');
-                        } else if (data.error === 'nonce_mismatch') {
-                            showToast('⚠️ Wrong nonce in JSON. Copy the prompt again.');
-                        } else {
-                            showToast(`⚠️ Verification failed: ${data.error}`);
-                        }
-                        throw new Error(data.error);
+                        showToast(`⚠️ Verification failed: ${data.error}`);
                     }
+                    hasSubmitted = false;
+                    submitBtn.innerHTML = '<span>🧠</span> Reveal My IQ';
+                    return;
                 }
                 
             } catch (e) {
                 console.error('Submit error:', e);
-                if (!iq) iq = 70 + Math.floor(Math.random() * 20);
+                showToast('⚠️ Network error. Try again.');
+                hasSubmitted = false;
+                submitBtn.innerHTML = '<span>🧠</span> Reveal My IQ';
+                return;
             }
             
             // Save results
