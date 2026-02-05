@@ -1147,13 +1147,25 @@
                         </ol>
                     </div>
                     
-                    <div class="response-section" style="max-width: 500px; margin: 0 auto 32px;">
+                    <div class="response-section" style="max-width: 500px; margin: 0 auto 24px;">
+                        <label style="display: block; color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 8px;">1. Paste the JSON response:</label>
                         <textarea 
                             class="response-input" 
                             id="responseInput" 
                             placeholder="Paste the JSON response from ChatGPT here"
                             oninput="handleResponseInput()"
-                            style="min-height: 100px;"
+                            style="min-height: 80px;"
+                        ></textarea>
+                    </div>
+                    
+                    <div class="response-section" style="max-width: 500px; margin: 0 auto 32px;">
+                        <label style="display: block; color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 8px;">2. Paste the same transcript you used:</label>
+                        <textarea 
+                            class="response-input" 
+                            id="transcriptInput" 
+                            placeholder="Paste the transcript you sent to ChatGPT"
+                            oninput="handleResponseInput()"
+                            style="min-height: 80px;"
                         ></textarea>
                     </div>
                 </div>
@@ -1451,12 +1463,14 @@
 
         function handleResponseInput() {
             const response = document.getElementById('responseInput').value;
+            const transcript = document.getElementById('transcriptInput').value.trim();
             const hasIQ2 = response.includes('"iq2json"') || response.includes('"type"');
+            const hasTranscript = transcript.length > 0;
             const username = document.getElementById('usernameInput').value.trim();
             
-            document.getElementById('submitBtn').disabled = !(hasIQ2 && username.length >= 2 && currentNonce);
+            document.getElementById('submitBtn').disabled = !(hasIQ2 && hasTranscript && username.length >= 2 && currentNonce);
             
-            if (hasIQ2) {
+            if (hasIQ2 && hasTranscript) {
                 document.getElementById('step2').classList.add('completed');
                 document.getElementById('step2').classList.remove('active');
                 document.getElementById('step3').classList.add('active');
@@ -1563,6 +1577,7 @@
                         nonce: currentNonce,
                         timestamp: currentTimestamp,
                         model_json: jsonStr,
+                        transcript_text: document.getElementById('transcriptInput').value.trim(),
                         username: username
                     })
                 });
@@ -1599,6 +1614,10 @@
                         'invalid_or_expired_nonce': '⏱️ Prompt expired. Refresh page.',
                         'nonce_already_used': '🔒 Already verified. One attempt only!',
                         'nonce_expired': '⏱️ Time ran out. Refresh page.',
+                        'missing_transcript': '❌ Transcript is required',
+                        'empty_transcript': '❌ Transcript cannot be empty',
+                        'implausible_profile': '❌ Profile looks fake (too many high scores)',
+                        'model_error': '❌ AI returned an error',
                     };
                     
                     errMsg = errorMap[errMsg] || `❌ Error: ${errMsg}`;
