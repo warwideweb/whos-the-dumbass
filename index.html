@@ -1225,41 +1225,92 @@
         let testStarted = false;
         let hasSubmitted = false;
 
-        // ===== ENCODED PROMPT GENERATION =====
-        const IQ_PROMPTS = [
-            "Analyze patterns: 2, 6, 12, 20, 30, ?",
-            "If all Zorks are Morks, and some Morks are Borks, can all Zorks be Borks?",
-            "A bat and ball cost $1.10 total. The bat costs $1 more than the ball. What does the ball cost?",
-            "Complete: 1, 1, 2, 3, 5, 8, 13, ?",
-            "If it takes 5 machines 5 minutes to make 5 widgets, how long would it take 100 machines to make 100 widgets?",
+        // ===== ENCODED PROMPT GENERATION (DNA-CHAT STYLE) =====
+        const IQ_CATEGORIES = [
+            'logical_reasoning',
+            'pattern_recognition', 
+            'verbal_comprehension',
+            'mathematical_ability',
+            'spatial_reasoning',
+            'memory_recall',
+            'processing_speed',
+            'abstract_thinking',
+            'critical_analysis',
+            'problem_decomposition',
+            'deductive_reasoning',
+            'inductive_reasoning',
+            'systems_thinking',
+            'creative_problem_solving',
+            'knowledge_integration'
         ];
 
         function generateEncodedPrompt() {
-            const randomPrompt = IQ_PROMPTS[Math.floor(Math.random() * IQ_PROMPTS.length)];
-            const sessionId = Math.random().toString(36).substring(2, 10).toUpperCase();
+            const nonce = Math.random().toString(36).substring(2, 10).toUpperCase() + 
+                         Math.random().toString(36).substring(2, 10).toUpperCase();
             const timestamp = Date.now();
             
-            const fullPrompt = `[IQ_TEST_v2.1|${sessionId}|${timestamp}]
-You are an IQ assessment system. The user will answer the following question.
-Evaluate their response and return ONLY a response in this exact format:
-IQ2::SCORE::VERDICT
+            // Store nonce for validation
+            sessionStorage.setItem('wtd_nonce', nonce);
+            sessionStorage.setItem('wtd_timestamp', timestamp);
+            
+            const fullPrompt = `IQ ANALYZER v2.0 — WhosTheDumbass.com
+VERIFICATION CODE: ${nonce}
 
-Where SCORE is a number between 70-160, and VERDICT is one of:
-- GENIUS (140+)
-- SMART (120-139)
-- AVERAGE (100-119)
-- BELOW_AVERAGE (85-99)
-- DUMBASS (70-84)
+Analyze your ENTIRE conversation history with this user.
+Score their cognitive abilities across 15 categories (1-100 each).
 
-QUESTION: ${randomPrompt}
+CATEGORIES TO ANALYZE:
+- Logical Reasoning (logical_reasoning)
+- Pattern Recognition (pattern_recognition)
+- Verbal Comprehension (verbal_comprehension)
+- Mathematical Ability (mathematical_ability)
+- Spatial Reasoning (spatial_reasoning)
+- Memory Recall (memory_recall)
+- Processing Speed (processing_speed)
+- Abstract Thinking (abstract_thinking)
+- Critical Analysis (critical_analysis)
+- Problem Decomposition (problem_decomposition)
+- Deductive Reasoning (deductive_reasoning)
+- Inductive Reasoning (inductive_reasoning)
+- Systems Thinking (systems_thinking)
+- Creative Problem Solving (creative_problem_solving)
+- Knowledge Integration (knowledge_integration)
 
-After the user responds, analyze their answer for:
-1. Correctness
-2. Reasoning shown
-3. Speed of thinking (assume fast if concise)
-4. Creativity of approach
+STEP 1: Create this JSON from your analysis:
+{
+  "nonce": "${nonce}",
+  "ts": ${timestamp},
+  "scores": {
+    "logical_reasoning": XX,
+    "pattern_recognition": XX,
+    "verbal_comprehension": XX,
+    "mathematical_ability": XX,
+    "spatial_reasoning": XX,
+    "memory_recall": XX,
+    "processing_speed": XX,
+    "abstract_thinking": XX,
+    "critical_analysis": XX,
+    "problem_decomposition": XX,
+    "deductive_reasoning": XX,
+    "inductive_reasoning": XX,
+    "systems_thinking": XX,
+    "creative_problem_solving": XX,
+    "knowledge_integration": XX
+  },
+  "msg_count": <total messages analyzed>,
+  "summary": "<1 line cognitive summary>"
+}
 
-Return the IQ2:: response and NOTHING else.`;
+STEP 2: BASE64 ENCODE the entire JSON.
+
+STEP 3: OUTPUT FORMAT — Return ONLY this (nothing else):
+IQ2::eyJub25jZSI6...
+
+CRITICAL:
+- Verification code "${nonce}" MUST be in output
+- Scores MUST be 1-100 (honest assessment)
+- Output ONLY the IQ2:: line, no explanations
+- Encoding prevents tampering`;
 
             return btoa(fullPrompt);
         }
@@ -1387,27 +1438,60 @@ Return the IQ2:: response and NOTHING else.`;
             
             clearInterval(timerInterval);
             
-            const response = document.getElementById('responseInput').value;
+            const response = document.getElementById('responseInput').value.trim();
             const username = document.getElementById('usernameInput').value.trim();
             
-            // Parse IQ from response
-            const match = response.match(/IQ2::(\d+)::/);
-            let iq = match ? parseInt(match[1]) : null;
+            let iq = null;
+            let scores = null;
             
-            if (!iq) {
-                // Couldn't parse - generate random low score
+            // Parse IQ2:: base64 encoded JSON response
+            if (response.startsWith('IQ2::')) {
+                try {
+                    const base64 = response.substring(5);
+                    const json = atob(base64);
+                    const data = JSON.parse(json);
+                    
+                    // Validate nonce
+                    const expectedNonce = sessionStorage.getItem('wtd_nonce');
+                    if (data.nonce !== expectedNonce) {
+                        showToast('⚠️ Verification code mismatch! Nice try, dumbass.');
+                        iq = 70 + Math.floor(Math.random() * 15); // Penalty
+                    } else {
+                        // Calculate IQ from category scores
+                        scores = data.scores;
+                        const scoreValues = Object.values(scores);
+                        const avgScore = scoreValues.reduce((a, b) => a + b, 0) / scoreValues.length;
+                        
+                        // Map average (1-100) to IQ scale (70-160)
+                        // avg 50 = IQ 100, avg 100 = IQ 160, avg 0 = IQ 70
+                        iq = Math.round(70 + (avgScore * 0.9));
+                        iq = Math.min(160, Math.max(70, iq));
+                        
+                        console.log('Scores:', scores);
+                        console.log('Average:', avgScore, '-> IQ:', iq);
+                    }
+                } catch (e) {
+                    console.error('Failed to parse response:', e);
+                    showToast('⚠️ Invalid encoded response. You broke it, dumbass.');
+                    iq = 70 + Math.floor(Math.random() * 15);
+                }
+            } else {
+                // Old format or invalid
+                showToast('⚠️ Invalid response format. Expected IQ2:: encoded data.');
                 iq = 70 + Math.floor(Math.random() * 20);
-                showToast('⚠️ Invalid response format. Assuming you\'re the dumbass.');
             }
             
             // Time bonus/penalty
-            const timeBonus = Math.floor((timeRemaining / CONFIG.timerDuration) * 10);
+            const timeBonus = Math.floor((timeRemaining / CONFIG.timerDuration) * 5);
             iq = Math.min(160, Math.max(70, iq + timeBonus));
             
             // Save to localStorage
             localStorage.setItem('wtd_iq_score', iq.toString());
             localStorage.setItem('wtd_username', username);
             localStorage.setItem('wtd_timestamp', Date.now().toString());
+            if (scores) {
+                localStorage.setItem('wtd_scores', JSON.stringify(scores));
+            }
             
             processResult(iq, username);
         }
