@@ -1142,7 +1142,7 @@
                         <ol style="color: var(--text-secondary); font-size: 0.95rem; padding-left: 24px; line-height: 1.8;">
                             <li>Open ChatGPT, Claude, or Gemini</li>
                             <li>Paste the prompt + your conversation</li>
-                            <li>Copy the <strong style="color: var(--neon-purple);">IQ2RES::...</strong> response</li>
+                            <li>Copy the <strong style="color: var(--neon-purple);">JSON response</strong></li>
                             <li>Paste it below</li>
                         </ol>
                     </div>
@@ -1151,7 +1151,7 @@
                         <textarea 
                             class="response-input" 
                             id="responseInput" 
-                            placeholder="Paste the IQ2RES::... response here"
+                            placeholder="Paste the JSON response from ChatGPT here"
                             oninput="handleResponseInput()"
                             style="min-height: 100px;"
                         ></textarea>
@@ -1184,6 +1184,13 @@
                 <h3 id="resultTitle">🚫 NICE TRY, DUMBASS</h3>
                 <p id="resultMessage">You already took the test. One brain, one chance. Your score is locked forever.</p>
                 <p style="margin-top: 15px; color: var(--neon-yellow);">Your Score: <strong id="lockedScore">—</strong></p>
+                
+                <!-- DNA2 Token Display -->
+                <div id="dna2TokenSection" style="display: none; margin-top: 24px; background: var(--bg-primary); border: 1px solid var(--neon-purple); border-radius: 12px; padding: 20px;">
+                    <p style="color: var(--neon-purple); font-weight: 600; margin-bottom: 12px;">🔐 Your DNA2 Token (shareable proof):</p>
+                    <div style="background: var(--bg-card); border-radius: 8px; padding: 12px; word-break: break-all; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--neon-green); max-height: 100px; overflow-y: auto;" id="dna2TokenDisplay"></div>
+                    <button onclick="copyDna2Token()" style="margin-top: 12px; padding: 10px 20px; background: var(--neon-purple); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">📋 Copy Token</button>
+                </div>
                 
                 <!-- High IQ URL Input (140+) -->
                 <div id="highIQUrlSection" style="display: none; margin-top: 20px;">
@@ -1394,6 +1401,7 @@
 
         // ===== NEW FLOW =====
         let currentNonce = null;
+        let currentTimestamp = null;
         let challengeExpiresAt = null;
         let challengeTimer = null;
 
@@ -1414,6 +1422,7 @@
                 if (!data.ok) throw new Error(data.error || 'Failed');
                 
                 currentNonce = data.nonce;
+                currentTimestamp = data.timestamp;
                 challengeExpiresAt = data.expires_at;
                 
                 // Copy the prompt
@@ -1442,7 +1451,7 @@
 
         function handleResponseInput() {
             const response = document.getElementById('responseInput').value;
-            const hasIQ2 = response.includes('IQ2RES::') || response.includes('IQ2::');
+            const hasIQ2 = response.includes('"iq2json"') || response.includes('"type"');
             const username = document.getElementById('usernameInput').value.trim();
             
             document.getElementById('submitBtn').disabled = !(hasIQ2 && username.length >= 2 && currentNonce);
@@ -1495,7 +1504,7 @@
             const username = document.getElementById('usernameInput').value.trim();
             const hasUsername = username.length >= 2;
             const response = document.getElementById('responseInput')?.value || '';
-            const hasResponse = response.includes('IQ2RES::') || response.includes('IQ2::');
+            const hasResponse = response.includes('"iq2json"') || response.includes('"type"');
             const hasNonce = !!currentNonce;
             
             document.getElementById('submitBtn').disabled = !(hasResponse && hasUsername && hasNonce);
@@ -1504,22 +1513,34 @@
         async function submitTest() {
             if (hasSubmitted) return;
             
-            if (!currentNonce) {
+            if (!currentNonce || !currentTimestamp) {
                 showToast('❌ Generate a prompt first!');
                 return;
             }
             
-            let response = document.getElementById('responseInput').value;
+            let response = document.getElementById('responseInput').value.trim();
             
-            // Extract the IQ2RES:: or IQ2:: line
-            const match = response.match(/IQ2RES::[A-Za-z0-9_-]+/) || response.match(/IQ2::[a-f0-9]+::[0-9,.\s-]+::.+/i);
-            if (!match) {
-                showToast('❌ Response must contain IQ2RES::... from the AI');
+            // Try to extract JSON from the response (may have markdown code blocks)
+            let jsonStr = response;
+            // Remove markdown code blocks if present
+            const jsonMatch = response.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+            if (jsonMatch) {
+                jsonStr = jsonMatch[1];
+            }
+            
+            // Validate it looks like JSON
+            if (!jsonStr.includes('"iq2json"') && !jsonStr.includes('"type"')) {
+                showToast('❌ Paste the JSON response from ChatGPT');
                 return;
             }
             
-            // Clean up the response (remove extra whitespace within)
-            const cleanResponse = match[0].replace(/\s+/g, ' ').trim();
+            // Try parsing to validate
+            try {
+                JSON.parse(jsonStr);
+            } catch (e) {
+                showToast('❌ Invalid JSON. Make sure you copied the full response.');
+                return;
+            }
             
             hasSubmitted = true;
             
@@ -1529,45 +1550,61 @@
             submitBtn.disabled = true;
             
             let iq = null;
-            let sealedToken = null;
+            let dna2Token = null;
             
             try {
                 showToast('🔐 Verifying response...');
                 
-                // Verify the IQ2 response
+                // Send JSON to /verify with nonce and timestamp
                 const res = await fetch(`${CONFIG.apiBase}/verify`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ response: cleanResponse })
+                    body: JSON.stringify({ 
+                        nonce: currentNonce,
+                        timestamp: currentTimestamp,
+                        model_json: jsonStr,
+                        username: username
+                    })
                 });
                 
                 const data = await res.json();
                 
                 if (data.ok) {
-                    sealedToken = data.token;
+                    dna2Token = data.dna2;
                     iq = data.iq;
-                    showToast('✅ Verified!');
+                    showToast('✅ Verified! Your DNA2 token is ready.');
                     clearInterval(challengeTimer);
+                    
+                    // Store the DNA2 token
+                    localStorage.setItem('wtd_dna2', dna2Token);
                 } else {
                     let errMsg = data.error || 'Verification failed';
+                    const detail = data.detail ? `: ${data.detail}` : '';
+                    
                     // User-friendly error messages
                     const errorMap = {
-                        'invalid_format': '❌ Wrong format. Copy the EXACT IQ2RES::... line from AI',
-                        'invalid_or_expired_nonce': '⏱️ Prompt expired. Refresh page and try again.',
+                        'invalid_json': '❌ Invalid JSON',
+                        'invalid_v': '❌ Wrong format (v must be 1)',
+                        'invalid_type': '❌ Wrong format (type must be iq2json)',
+                        'nonce_mismatch': '❌ Nonce doesn\'t match. Use the prompt from this page.',
+                        'timestamp_mismatch': '❌ Timestamp doesn\'t match. Use the prompt from this page.',
+                        'missing_profile': '❌ Missing profile data',
+                        'invalid_profile_keys': '❌ Missing required keys',
+                        'missing_profile_keys': '❌ Missing profile keys',
+                        'invalid_score_type': '❌ Scores must be numbers',
+                        'invalid_score_range': '❌ Scores must be 0-100',
+                        'invalid_context_messages': '❌ context_messages must be integer >= 0',
+                        'invalid_summary_chars': '❌ Summary has invalid characters',
+                        'summary_too_long': '❌ Summary too long (max 240 chars)',
+                        'invalid_or_expired_nonce': '⏱️ Prompt expired. Refresh page.',
                         'nonce_already_used': '🔒 Already verified. One attempt only!',
-                        'nonce_expired': '⏱️ Time ran out. Refresh page and try again.',
-                        'invalid_score_values': '❌ Invalid scores. Ask AI to give numbers 0-100.',
-                        'missing_transcript': '❌ No conversation provided.',
-                        'transcript_too_short': '❌ Conversation too short (need 50+ characters).',
+                        'nonce_expired': '⏱️ Time ran out. Refresh page.',
                     };
                     
-                    // Check for partial matches
-                    if (errMsg.startsWith('expected_28_scores')) errMsg = `❌ Need exactly 28 scores. ${errMsg}`;
-                    else errMsg = errorMap[errMsg] || `❌ Error: ${errMsg}`;
-                    
-                    showToast(errMsg);
+                    errMsg = errorMap[errMsg] || `❌ Error: ${errMsg}`;
+                    showToast(errMsg + detail);
                     hasSubmitted = false;
-                    submitBtn.innerHTML = '<span>🚀</span> GO / VERIFY';
+                    submitBtn.innerHTML = '<span>🚀</span> VERIFY';
                     submitBtn.disabled = false;
                     return;
                 }
@@ -1576,7 +1613,7 @@
                 console.error('Submit error:', e);
                 showToast('⚠️ Network error. Try again.');
                 hasSubmitted = false;
-                submitBtn.innerHTML = '<span>🚀</span> GO / VERIFY';
+                submitBtn.innerHTML = '<span>🚀</span> VERIFY';
                 submitBtn.disabled = false;
                 return;
             }
@@ -1585,16 +1622,15 @@
             localStorage.setItem('wtd_iq_score', iq.toString());
             localStorage.setItem('wtd_username', username);
             localStorage.setItem('wtd_timestamp', Date.now().toString());
-            if (sealedToken) localStorage.setItem('wtd_sealed_token', sealedToken);
-            if (data.userId) localStorage.setItem('wtd_user_id', data.userId);
+            if (dna2Token) localStorage.setItem('wtd_dna2', dna2Token);
             
             // Refresh leaderboard
             loadLeaderboard();
             
-            processResult(iq, username, iq >= 140);
+            processResult(iq, username, iq >= 140, dna2Token);
         }
 
-        function processResult(iq, username = 'Anonymous', highIQ = false) {
+        function processResult(iq, username = 'Anonymous', highIQ = false, dna2Token = null) {
             // Update display
             updateIQDisplay(iq);
             
@@ -1605,6 +1641,15 @@
             document.getElementById('testSection').style.display = 'none';
             document.getElementById('alreadyTested').style.display = 'block';
             document.getElementById('lockedScore').textContent = iq;
+            
+            // Display DNA2 token if available
+            if (dna2Token) {
+                const tokenSection = document.getElementById('dna2TokenSection');
+                if (tokenSection) {
+                    tokenSection.style.display = 'block';
+                    document.getElementById('dna2TokenDisplay').textContent = dna2Token;
+                }
+            }
             
             // Update result message based on IQ
             const titleEl = document.getElementById('resultTitle');
@@ -1635,6 +1680,15 @@
                 msgEl.textContent = 'Congratulations! You\'re officially the dumbass.';
                 showToast('💀 DUMBASS CONFIRMED! We have a winner!');
             }
+        }
+        
+        function copyDna2Token() {
+            const token = document.getElementById('dna2TokenDisplay').textContent;
+            navigator.clipboard.writeText(token).then(() => {
+                showToast('✓ DNA2 token copied!');
+            }).catch(() => {
+                showToast('⚠️ Failed to copy. Select and copy manually.');
+            });
         }
         
         function saveUserUrl() {
