@@ -1173,44 +1173,46 @@
                 <div class="payment-grid">
                     <div class="payment-card">
                         <h3>☀️ Pay with SOL</h3>
-                        <div class="wallet-display">
-                            <div class="wallet-label">Solana Wallet</div>
-                            <div class="wallet-address">
-                                <span id="solWallet">AriTQL1mpcBg8bSnmuZn7u1sHF8XZQmCmLDgt5NsYSLw</span>
-                                <span class="copy-icon" onclick="copyWallet('sol')">📋</span>
-                            </div>
+                        
+                        <!-- Wallet Connection -->
+                        <div id="walletSection">
+                            <button id="connectWalletBtn" onclick="connectWallet()" style="width: 100%; padding: 12px; background: linear-gradient(135deg, #9945FF, #14F195); color: #fff; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 1rem; margin-bottom: 15px;">
+                                🔗 Connect Phantom Wallet
+                            </button>
+                            <p id="walletStatus" style="text-align: center; color: var(--text-muted); font-size: 0.85rem;"></p>
                         </div>
-                        <div class="amount-input-group">
-                            <input type="number" class="amount-input" id="solAmount" placeholder="0.00" step="0.01" oninput="updateBoostPreview('sol')">
-                            <div class="currency-badge">
-                                <span>◎</span> SOL
+                        
+                        <!-- After Connected -->
+                        <div id="paymentForm" style="display: none;">
+                            <p style="color: var(--neon-green); font-size: 0.9rem; margin-bottom: 10px;">✅ Connected: <span id="connectedWallet"></span></p>
+                            
+                            <div class="amount-input-group">
+                                <input type="number" class="amount-input" id="solAmount" placeholder="Amount in SOL" step="0.01" min="0.01" oninput="updateBoostPreview('sol')">
+                                <div class="currency-badge">
+                                    <span>◎</span> SOL
+                                </div>
                             </div>
-                        </div>
-                        <div class="boost-preview">
-                            <div class="boost-preview-label">Ranking Boost</div>
-                            <div class="boost-preview-value" id="solBoost">+0 positions</div>
+                            <div class="boost-preview">
+                                <div class="boost-preview-label">Ranking Boost</div>
+                                <div class="boost-preview-value" id="solBoost">+0 positions</div>
+                            </div>
+                            
+                            <button id="payBtn" onclick="sendPayment()" style="width: 100%; padding: 12px; background: var(--neon-green); color: #000; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 1rem; margin-top: 10px;">
+                                💸 Send Payment
+                            </button>
                         </div>
                     </div>
 
                     <div class="payment-card">
                         <h3>₿ Pay with BTC</h3>
+                        <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 15px;">Send BTC directly to:</p>
                         <div class="wallet-display">
-                            <div class="wallet-label">Bitcoin Wallet</div>
                             <div class="wallet-address">
-                                <span id="btcWallet">bc1qr5edxvw97uef8297uymh036dsercf33kjta3k0</span>
+                                <span id="btcWallet" style="font-size: 0.7rem; word-break: break-all;">bc1qr5edxvw97uef8297uymh036dsercf33kjta3k0</span>
                                 <span class="copy-icon" onclick="copyWallet('btc')">📋</span>
                             </div>
                         </div>
-                        <div class="amount-input-group">
-                            <input type="number" class="amount-input" id="btcAmount" placeholder="0.00" step="0.0001" oninput="updateBoostPreview('btc')">
-                            <div class="currency-badge">
-                                <span>₿</span> BTC
-                            </div>
-                        </div>
-                        <div class="boost-preview">
-                            <div class="boost-preview-label">Ranking Boost</div>
-                            <div class="boost-preview-value" id="btcBoost">+0 positions</div>
-                        </div>
+                        <p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 10px;">After sending, DM @YourTwitter with tx hash for manual boost.</p>
                     </div>
                 </div>
 
@@ -1563,6 +1565,10 @@
             localStorage.setItem('wtd_username', username);
             localStorage.setItem('wtd_timestamp', Date.now().toString());
             if (sealedToken) localStorage.setItem('wtd_sealed_token', sealedToken);
+            if (data.userId) localStorage.setItem('wtd_user_id', data.userId);
+            
+            // Refresh leaderboard
+            loadLeaderboard();
             
             processResult(iq, username, iq >= 140);
         }
@@ -1712,17 +1718,33 @@
         }
 
         // ===== LEADERBOARD =====
-        // Empty leaderboard - real users only
-        const MOCK_LEADERBOARD = [];
+        // Real leaderboard from API
+        let leaderboardData = [];
 
-        function loadLeaderboard() {
+        async function loadLeaderboard() {
             const body = document.getElementById('leaderboardBody');
-            body.innerHTML = '';
             
-            MOCK_LEADERBOARD.forEach((user, index) => {
-                const row = createLeaderboardRow(user, index);
-                body.appendChild(row);
-            });
+            try {
+                const res = await fetch(`${CONFIG.apiBase}/leaderboard`);
+                const data = await res.json();
+                
+                if (data.ok && data.leaderboard) {
+                    leaderboardData = data.leaderboard;
+                    body.innerHTML = '';
+                    
+                    if (leaderboardData.length === 0) {
+                        body.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted);">No scores yet. Be the first!</div>';
+                        return;
+                    }
+                    
+                    leaderboardData.forEach((user, index) => {
+                        const row = createLeaderboardRow(user, index);
+                        body.appendChild(row);
+                    });
+                }
+            } catch (e) {
+                body.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted);">Could not load leaderboard</div>';
+            }
         }
 
         function createLeaderboardRow(user, index) {
@@ -1799,6 +1821,124 @@
             
             // Reload display
             loadLeaderboard();
+        }
+
+        // ===== SOLANA WALLET =====
+        let connectedWallet = null;
+        const RECEIVING_WALLET = "AriTQL1mpcBg8bSnmuZn7u1sHF8XZQmCmLDgt5NsYSLw";
+
+        async function connectWallet() {
+            const statusEl = document.getElementById('walletStatus');
+            const connectBtn = document.getElementById('connectWalletBtn');
+            
+            try {
+                // Check if Phantom is installed
+                if (!window.solana || !window.solana.isPhantom) {
+                    statusEl.innerHTML = '❌ Phantom wallet not found. <a href="https://phantom.app" target="_blank" style="color: var(--neon-purple);">Install Phantom</a>';
+                    return;
+                }
+
+                connectBtn.textContent = '⏳ Connecting...';
+                connectBtn.disabled = true;
+
+                // Connect to Phantom
+                const response = await window.solana.connect();
+                connectedWallet = response.publicKey.toString();
+                
+                // Show connected state
+                document.getElementById('walletSection').querySelector('button').style.display = 'none';
+                document.getElementById('paymentForm').style.display = 'block';
+                document.getElementById('connectedWallet').textContent = connectedWallet.substring(0, 4) + '...' + connectedWallet.substring(connectedWallet.length - 4);
+                
+                showToast('✅ Wallet connected!');
+                
+            } catch (e) {
+                statusEl.textContent = '❌ Connection failed: ' + e.message;
+                connectBtn.textContent = '🔗 Connect Phantom Wallet';
+                connectBtn.disabled = false;
+            }
+        }
+
+        async function sendPayment() {
+            if (!connectedWallet) {
+                showToast('❌ Connect wallet first');
+                return;
+            }
+
+            const amount = parseFloat(document.getElementById('solAmount').value);
+            if (!amount || amount < 0.01) {
+                showToast('❌ Enter amount (min 0.01 SOL)');
+                return;
+            }
+
+            const userId = localStorage.getItem('wtd_user_id');
+            if (!userId) {
+                showToast('❌ Take the IQ test first to get a user ID');
+                return;
+            }
+
+            const payBtn = document.getElementById('payBtn');
+            payBtn.textContent = '⏳ Processing...';
+            payBtn.disabled = true;
+
+            try {
+                // Create Solana transaction
+                const { Connection, PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } = window.solanaWeb3 || {};
+                
+                if (!Connection) {
+                    // Fallback: Just show the wallet address to copy
+                    showToast('📋 Send ' + amount + ' SOL to: ' + RECEIVING_WALLET);
+                    payBtn.textContent = '💸 Send Payment';
+                    payBtn.disabled = false;
+                    return;
+                }
+
+                const connection = new Connection('https://api.mainnet-beta.solana.com');
+                const fromPubkey = new PublicKey(connectedWallet);
+                const toPubkey = new PublicKey(RECEIVING_WALLET);
+
+                const transaction = new Transaction().add(
+                    SystemProgram.transfer({
+                        fromPubkey,
+                        toPubkey,
+                        lamports: Math.floor(amount * LAMPORTS_PER_SOL)
+                    })
+                );
+
+                transaction.feePayer = fromPubkey;
+                transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
+
+                // Sign and send
+                const signed = await window.solana.signTransaction(transaction);
+                const signature = await connection.sendRawTransaction(signed.serialize());
+                
+                showToast('⏳ Transaction sent! Verifying...');
+
+                // Wait for confirmation
+                await connection.confirmTransaction(signature);
+
+                // Verify with our backend
+                const verifyRes = await fetch(`${CONFIG.apiBase}/payment/verify`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ signature, userId, expectedAmount: amount })
+                });
+
+                const verifyData = await verifyRes.json();
+
+                if (verifyData.ok) {
+                    showToast(`✅ Payment verified! +${verifyData.boost} boost! New rank: #${verifyData.newRank}`);
+                    loadLeaderboard(); // Refresh
+                } else {
+                    showToast('⚠️ Payment sent but verification pending. Contact support with tx: ' + signature.substring(0, 20) + '...');
+                }
+
+            } catch (e) {
+                showToast('❌ ' + (e.message || 'Transaction failed'));
+            }
+
+            payBtn.textContent = '💸 Send Payment';
+            payBtn.disabled = false;
         }
 
         // ===== BOOST PREVIEW =====
