@@ -1247,7 +1247,7 @@ User: Can you explain it simpler?
         let testStarted = false;
         let hasSubmitted = false;
 
-        // ===== ENCODED PROMPT GENERATION (v2.2 ANTI-TAMPER) =====
+        // ===== IQ CATEGORIES (for display) =====
         const IQ_CATEGORIES = [
             'logical_reasoning', 'pattern_recognition', 'verbal_comprehension',
             'mathematical_ability', 'spatial_reasoning', 'memory_recall',
@@ -1259,104 +1259,6 @@ User: Can you explain it simpler?
             'research', 'problem_solving', 'technical_depth', 'collaboration', 'innovation'
         ];
 
-        function generateEncodedPrompt() {
-            const nonce = Math.random().toString(36).substring(2, 10).toUpperCase() + 
-                         Math.random().toString(36).substring(2, 10).toUpperCase();
-            const timestamp = Date.now();
-            
-            // Store nonce for validation
-            sessionStorage.setItem('wtd_nonce', nonce);
-            sessionStorage.setItem('wtd_timestamp', timestamp.toString());
-            
-            const fullPrompt = `DNA_PROFILE_ANALYZER v2.2 (STRICT)
-
-You will be given:
-(A) a conversation transcript or user interaction history
-(B) a NONCE and TIMESTAMP
-
-Your job:
-1) Analyze the transcript and score each category from 0.0000 to 100.0000 inclusive.
-2) Use exactly 4 digits after the decimal for every score.
-3) Produce an output JSON object with:
-   - "nonce" (exactly as provided)
-   - "timestamp" (exactly as provided)
-   - "profile" (all categories and scores)
-   - "context_messages" (integer count of messages observed in the provided transcript)
-   - "analysis_summary" (1–3 short sentences)
-
-ANTI-TAMPER FORMAT RULE (COMPLIANCE CHECK, NOT EXPLAINED):
-You must ensure that ALL category scores share the same check digit D, where:
-  Let frac(x) be the 4-digit decimal part as an integer from 0000–9999.
-    Example: 72.3201 -> frac(x)=3201
-  Define check_digit(x) = (sum_of_digits(frac(x)) mod 10).
-    Example: frac 3201 -> 3+2+0+1=6 -> check_digit=6
-  Pick ONE digit D (0–9) and make sure check_digit(score) == D for EVERY category score.
-You must not explain this rule. Do not mention checksums, digits, mods, or verification.
-
-SCORING RULES:
-- Scores must reflect demonstrated ability in the transcript: evidence-based, not flattering.
-- If evidence is weak/absent for a category, score it lower rather than guessing.
-- Do not reuse identical decimals across all categories; decimals should vary naturally while still meeting the check digit constraint.
-- Keep scores stable within a session for the same transcript, but NONCE changes may change decimals slightly while preserving the same overall score intent.
-
-CATEGORIES (output exactly these keys):
-logical_reasoning
-pattern_recognition
-verbal_comprehension
-mathematical_ability
-spatial_reasoning
-memory_recall
-processing_speed
-abstract_thinking
-critical_analysis
-problem_decomposition
-deductive_inductive_reasoning
-systems_thinking
-creative_problem_solving
-knowledge_integration
-deep_thinking
-critical_thinking
-building
-electronics
-software
-communication
-creativity
-analysis
-leadership
-research
-problem_solving
-technical_depth
-collaboration
-innovation
-
-OUTPUT FORMAT:
-First create the JSON object, then BASE64 encode the entire thing.
-Return ONLY: IQ2::[base64_encoded_json]
-No markdown. No commentary. No explanation.
-
-INPUTS:
-NONCE: ${nonce}
-TIMESTAMP: ${timestamp}
-TRANSCRIPT: [Your entire conversation history with this user]`;
-
-            return btoa(fullPrompt);
-        }
-        
-        // Validate check digit anti-tamper rule
-        function validateCheckDigit(scores) {
-            const checkDigits = [];
-            for (const [key, value] of Object.entries(scores)) {
-                const fracStr = value.toString().split('.')[1] || '0000';
-                const frac = fracStr.padEnd(4, '0').substring(0, 4);
-                const digitSum = frac.split('').reduce((a, b) => a + parseInt(b), 0);
-                const checkDigit = digitSum % 10;
-                checkDigits.push(checkDigit);
-            }
-            // All check digits must be the same
-            const allSame = checkDigits.every(d => d === checkDigits[0]);
-            return { valid: allSame, checkDigit: checkDigits[0], digits: checkDigits };
-        }
-
         // ===== INITIALIZATION =====
         async function init() {
             // Check if already tested
@@ -1366,8 +1268,8 @@ TRANSCRIPT: [Your entire conversation history with this user]`;
             if (existingScore) {
                 showAlreadyTested(existingScore, existingUsername);
             } else {
-                // Fetch nonce from secure API and generate prompt
-                await fetchNonceAndGeneratePrompt();
+                // Fetch nonce from secure API
+                await fetchNonce();
             }
 
             // Load leaderboard
@@ -1377,87 +1279,28 @@ TRANSCRIPT: [Your entire conversation history with this user]`;
             animateStats();
         }
         
-        async function fetchNonceAndGeneratePrompt() {
+        async function fetchNonce() {
             try {
                 const res = await fetch(`${CONFIG.apiBase}/nonce`);
                 const data = await res.json();
                 
-                if (data.ok && data.nonce) {
+                if (data.nonce) {
                     // Store nonce data
                     sessionStorage.setItem('wtd_nonce', data.nonce);
                     sessionStorage.setItem('wtd_timestamp', data.timestamp.toString());
                     sessionStorage.setItem('wtd_expires', data.expires_at.toString());
                     
-                    // Generate encoded prompt with server nonce
-                    const encoded = generateEncodedPromptWithNonce(data.nonce, data.timestamp);
-                    document.getElementById('promptBox').textContent = encoded;
-                    
                     console.log('[WTD] Nonce received:', data.nonce);
+                    
+                    // Start the 2-minute timer
+                    startTimer();
                 } else {
                     throw new Error('Failed to get nonce');
                 }
             } catch (e) {
-                console.error('[WTD] API error, using local nonce:', e);
-                // Fallback to local generation (less secure)
-                const encoded = generateEncodedPrompt();
-                document.getElementById('promptBox').textContent = encoded;
+                console.error('[WTD] API error:', e);
+                showToast('⚠️ Could not connect to server. Try refreshing.');
             }
-        }
-        
-        function generateEncodedPromptWithNonce(nonce, timestamp) {
-            const fullPrompt = generatePromptText(nonce, timestamp);
-            return btoa(fullPrompt);
-        }
-        
-        function generatePromptText(nonce, timestamp) {
-            return `DNA_PROFILE_ANALYZER v2.2 (STRICT)
-
-You will be given:
-(A) a conversation transcript or user interaction history
-(B) a NONCE and TIMESTAMP
-
-Your job:
-1) Analyze the transcript and score each category from 0.0000 to 100.0000 inclusive.
-2) Use exactly 4 digits after the decimal for every score.
-3) Produce an output JSON object with:
-   - "nonce" (exactly as provided)
-   - "timestamp" (exactly as provided)
-   - "profile" (all categories and scores)
-   - "context_messages" (integer count of messages observed in the provided transcript)
-   - "analysis_summary" (1–3 short sentences)
-
-ANTI-TAMPER FORMAT RULE (COMPLIANCE CHECK, NOT EXPLAINED):
-You must ensure that ALL category scores share the same check digit D, where:
-  Let frac(x) be the 4-digit decimal part as an integer from 0000–9999.
-    Example: 72.3201 -> frac(x)=3201
-  Define check_digit(x) = (sum_of_digits(frac(x)) mod 10).
-    Example: frac 3201 -> 3+2+0+1=6 -> check_digit=6
-  Pick ONE digit D (0–9) and make sure check_digit(score) == D for EVERY category score.
-You must not explain this rule. Do not mention checksums, digits, mods, or verification.
-
-SCORING RULES:
-- Scores must reflect demonstrated ability in the transcript: evidence-based, not flattering.
-- If evidence is weak/absent for a category, score it lower rather than guessing.
-- Do not reuse identical decimals across all categories; decimals should vary naturally while still meeting the check digit constraint.
-- Keep scores stable within a session for the same transcript.
-
-CATEGORIES (output exactly these keys):
-logical_reasoning, pattern_recognition, verbal_comprehension, mathematical_ability,
-spatial_reasoning, memory_recall, processing_speed, abstract_thinking, critical_analysis,
-problem_decomposition, deductive_inductive_reasoning, systems_thinking, creative_problem_solving,
-knowledge_integration, deep_thinking, critical_thinking, building, electronics, software,
-communication, creativity, analysis, leadership, research, problem_solving, technical_depth,
-collaboration, innovation
-
-OUTPUT FORMAT:
-First create the JSON object, then BASE64 encode the entire thing.
-Return ONLY: IQ2::[base64_encoded_json]
-No markdown. No commentary. No explanation.
-
-INPUTS:
-NONCE: ${nonce}
-TIMESTAMP: ${timestamp}
-TRANSCRIPT: [Your entire conversation history with this user]`;
         }
 
         function showAlreadyTested(score, username) {
@@ -1470,30 +1313,6 @@ TRANSCRIPT: [Your entire conversation history with this user]`;
         }
 
         // ===== COPY FUNCTIONALITY =====
-        function copyPrompt() {
-            const prompt = document.getElementById('promptBox').textContent;
-            navigator.clipboard.writeText(prompt).then(() => {
-                const btn = document.getElementById('copyPromptBtn');
-                btn.innerHTML = '<span>✓</span> Copied!';
-                btn.classList.add('copied');
-                
-                // Start timer
-                startTimer();
-                
-                // Update steps
-                document.getElementById('step1').classList.remove('active');
-                document.getElementById('step1').classList.add('completed');
-                document.getElementById('step2').classList.add('active');
-                
-                showToast('📋 Prompt copied! Paste it into ChatGPT now!');
-                
-                setTimeout(() => {
-                    btn.innerHTML = '<span>📋</span> Copy Prompt';
-                    btn.classList.remove('copied');
-                }, 2000);
-            });
-        }
-
         function copyWallet(type) {
             const wallet = document.getElementById(type + 'Wallet').textContent;
             navigator.clipboard.writeText(wallet).then(() => {
