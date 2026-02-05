@@ -1043,11 +1043,11 @@
                 <div class="step-indicator">
                     <div class="step active" id="step1">
                         <div class="step-number">1</div>
-                        <div class="step-text">Enter Chat</div>
+                        <div class="step-text">Copy</div>
                     </div>
                     <div class="step" id="step2">
                         <div class="step-number">2</div>
-                        <div class="step-text">Copy Prompt</div>
+                        <div class="step-text">Paste in ChatGPT</div>
                     </div>
                     <div class="step" id="step3">
                         <div class="step-number">3</div>
@@ -1055,33 +1055,22 @@
                     </div>
                 </div>
 
-                <!-- Step 1: Paste your conversation -->
+                <!-- Step 1: Just COPY button -->
                 <div id="step1Section">
-                    <p style="color: var(--text-secondary); margin-bottom: 10px;">Paste your AI conversation below (Ctrl+V / Cmd+V):</p>
-                    <div class="response-section">
-                        <textarea 
-                            class="response-input" 
-                            id="transcriptInput" 
-                            placeholder="Paste your conversation here (Ctrl+V / Cmd+V)..."
-                            oninput="handleTranscriptInput()"
-                            style="min-height: 150px;"
-                        ></textarea>
-                    </div>
-                    
-                    <button class="submit-btn" id="generateBtn" onclick="generatePrompt()" disabled style="background: linear-gradient(135deg, var(--neon-green), var(--neon-blue));">
-                        <span>📋</span> COPY PROMPT
+                    <button class="submit-btn" id="copyBtn" onclick="copyPrompt()" style="background: linear-gradient(135deg, var(--neon-green), var(--neon-blue));">
+                        <span>📋</span> COPY
                     </button>
                 </div>
                 
-                <!-- Step 2 & 3: After prompt generated -->
+                <!-- Step 2 & 3: After prompt copied -->
                 <div id="step2Section" style="display: none;">
                     <div id="timerDisplay" style="text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 1.2rem; color: var(--neon-green); margin: 10px 0;"></div>
                     
                     <div style="background: var(--bg-secondary); border-radius: 10px; padding: 15px; margin: 15px 0;">
-                        <p style="color: var(--neon-green); font-weight: 600; margin-bottom: 10px;">✅ Prompt copied! Now:</p>
+                        <p style="color: var(--neon-green); font-weight: 600; margin-bottom: 10px;">✅ Copied! Now:</p>
                         <ol style="color: var(--text-secondary); font-size: 0.9rem; padding-left: 20px;">
-                            <li>Open ChatGPT, Gemini, or Claude</li>
-                            <li>Paste the prompt (Ctrl+V / Cmd+V)</li>
+                            <li>Open ChatGPT/Gemini/Claude</li>
+                            <li>Paste prompt + your conversation</li>
                             <li>Copy the <strong>IQ2::...</strong> response</li>
                             <li>Paste it below</li>
                         </ol>
@@ -1091,7 +1080,7 @@
                         <textarea 
                             class="response-input" 
                             id="responseInput" 
-                            placeholder="Paste the IQ2::... response from AI here"
+                            placeholder="Paste the IQ2::... response here"
                             oninput="handleResponseInput()"
                             style="min-height: 80px;"
                         ></textarea>
@@ -1334,46 +1323,14 @@
         let challengeExpiresAt = null;
         let challengeTimer = null;
 
-        function handleTranscriptInput() {
-            const transcript = document.getElementById('transcriptInput').value.trim();
-            const hasContent = transcript.length >= 50;
-            document.getElementById('generateBtn').disabled = !hasContent;
-            
-            if (hasContent) {
-                document.getElementById('step1').classList.add('active');
-            }
-        }
-        
-        async function pasteTranscript() {
-            try {
-                const text = await navigator.clipboard.readText();
-                document.getElementById('transcriptInput').value = text;
-                handleTranscriptInput();
-                showToast('✅ Pasted!');
-            } catch (e) {
-                showToast('❌ Paste failed - try Ctrl+V / Cmd+V');
-            }
-        }
-
-        async function generatePrompt() {
-            const transcript = document.getElementById('transcriptInput').value.trim();
-            
-            if (transcript.length < 50) {
-                showToast('❌ Paste a longer conversation (at least 50 characters)');
-                return;
-            }
-            
-            const generateBtn = document.getElementById('generateBtn');
-            generateBtn.disabled = true;
-            generateBtn.innerHTML = '<span>⏳</span> Generating...';
+        async function copyPrompt() {
+            const copyBtn = document.getElementById('copyBtn');
+            copyBtn.disabled = true;
+            copyBtn.innerHTML = '<span>⏳</span> ...';
             
             try {
-                // Send transcript to server, get prompt back
-                const res = await fetch(`${CONFIG.apiBase}/prompt`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ transcript })
-                });
+                // Get prompt from server
+                const res = await fetch(`${CONFIG.apiBase}/prompt`);
                 const data = await res.json();
                 
                 if (!data.ok) throw new Error(data.error || 'Failed');
@@ -1381,11 +1338,11 @@
                 currentNonce = data.nonce;
                 challengeExpiresAt = data.expires_at;
                 
-                // Copy the complete prompt (WITH transcript baked in)
+                // Copy the prompt
                 await navigator.clipboard.writeText(data.prompt);
                 
-                generateBtn.innerHTML = '<span>✅</span> COPIED!';
-                showToast('✅ Prompt copied! Now paste into ChatGPT/Gemini/Claude.');
+                copyBtn.innerHTML = '<span>✅</span> COPIED!';
+                showToast('✅ Copied! Now paste into ChatGPT with your conversation.');
                 
                 // Show step 2
                 document.getElementById('step1Section').style.display = 'none';
@@ -1401,8 +1358,8 @@
                 
             } catch (e) {
                 showToast(`❌ ${e.message}`);
-                generateBtn.disabled = false;
-                generateBtn.innerHTML = '<span>📋</span> GENERATE & COPY PROMPT';
+                copyBtn.disabled = false;
+                copyBtn.innerHTML = '<span>📋</span> COPY';
             }
         }
 
