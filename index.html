@@ -1058,20 +1058,15 @@
                 <!-- Step 1: Paste your conversation -->
                 <div id="step1Section">
                     <p style="color: var(--text-secondary); margin-bottom: 10px;">Paste your AI conversation (ChatGPT, Claude, Gemini, etc):</p>
-                    <div class="response-section">
+                    <div class="response-section" style="position: relative;">
                         <textarea 
                             class="response-input" 
                             id="transcriptInput" 
-                            placeholder="Paste your conversation here...
-
-Example:
-Me: What is quantum computing?
-AI: Quantum computing uses quantum bits...
-Me: Can you explain more?
-AI: Sure, let me elaborate..."
+                            placeholder="Click PASTE or Ctrl+V / Cmd+V to paste your conversation here..."
                             oninput="handleTranscriptInput()"
                             style="min-height: 150px;"
                         ></textarea>
+                        <button onclick="pasteTranscript()" style="position: absolute; top: 10px; right: 10px; padding: 8px 16px; background: var(--neon-green); color: #000; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.9rem;">📋 PASTE</button>
                     </div>
                     
                     <button class="submit-btn" id="generateBtn" onclick="generatePrompt()" disabled style="background: linear-gradient(135deg, var(--neon-green), var(--neon-blue));">
@@ -1345,6 +1340,17 @@ AI: Sure, let me elaborate..."
             
             if (hasContent) {
                 document.getElementById('step1').classList.add('active');
+            }
+        }
+        
+        async function pasteTranscript() {
+            try {
+                const text = await navigator.clipboard.readText();
+                document.getElementById('transcriptInput').value = text;
+                handleTranscriptInput();
+                showToast('✅ Pasted!');
+            } catch (e) {
+                showToast('❌ Paste failed - try Ctrl+V / Cmd+V');
             }
         }
 
@@ -1707,23 +1713,8 @@ AI: Sure, let me elaborate..."
         }
 
         // ===== LEADERBOARD =====
-        const MOCK_LEADERBOARD = [
-            { rank: 1, username: '@BigBrain420', iq: 158, links: 'twitter.com/bigbrain', boost: 500, badges: [] },
-            { rank: 2, username: '@QuantumThot', iq: 152, links: 'onlyfans.com/smart', boost: 0, badges: ['stupid'] },
-            { rank: 3, username: '@ElonSimp', iq: 147, links: 'x.com/elonsimp', boost: 250, badges: [] },
-            { rank: 4, username: '@ActualGenius', iq: 145, links: 'github.com/genius', boost: 0, badges: [] },
-            { rank: 5, username: '@CryptoKid', iq: 142, links: 'debank.com/profile', boost: 1000, badges: ['dumb'] },
-            { rank: 6, username: '@GPTWhisperer', iq: 141, links: 'linkedin.com/in/ai', boost: 0, badges: [] },
-            { rank: 7, username: '@MidcurveMaxi', iq: 138, links: null, boost: 0, badges: [] },
-            { rank: 8, username: '@DegenDave', iq: 135, links: null, boost: 750, badges: ['stupid', 'dumb'] },
-            { rank: 9, username: '@SolanaSteve', iq: 128, links: null, boost: 0, badges: [] },
-            { rank: 10, username: '@NFTNormie', iq: 119, links: null, boost: 0, badges: [] },
-            { rank: 11, username: '@AverageAndy', iq: 105, links: null, boost: 0, badges: [] },
-            { rank: 12, username: '@RoomTempIQ', iq: 98, links: null, boost: 200, badges: ['dumb'] },
-            { rank: 13, username: '@SmoothBrain', iq: 89, links: null, boost: 0, badges: [] },
-            { rank: 14, username: '@ActualDumbass', iq: 78, links: null, boost: 0, badges: ['stupid'] },
-            { rank: 15, username: '@BrickIQ', iq: 72, links: null, boost: 0, badges: [] },
-        ];
+        // Empty leaderboard - real users only
+        const MOCK_LEADERBOARD = [];
 
         function loadLeaderboard() {
             const body = document.getElementById('leaderboardBody');
