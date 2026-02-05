@@ -1037,21 +1037,21 @@
                 <div class="step-indicator">
                     <div class="step active" id="step1">
                         <div class="step-number">1</div>
-                        <div class="step-text">Copy Challenge</div>
+                        <div class="step-text">Copy Prompt</div>
                     </div>
                     <div class="step" id="step2">
                         <div class="step-number">2</div>
-                        <div class="step-text">Paste in ChatGPT</div>
+                        <div class="step-text">Run in ChatGPT</div>
                     </div>
                     <div class="step" id="step3">
                         <div class="step-number">3</div>
-                        <div class="step-text">Verify</div>
+                        <div class="step-text">Paste Result</div>
                     </div>
                 </div>
 
-                <!-- Step 1: Copy Challenge -->
-                <button class="submit-btn" id="copyBtn" onclick="copyChallenge()" style="background: linear-gradient(135deg, var(--neon-green), var(--neon-blue)); margin-bottom: 15px;">
-                    <span>📋</span> COPY CHALLENGE
+                <!-- Step 1: Copy Prompt -->
+                <button class="submit-btn" id="copyBtn" onclick="copyPrompt()" style="background: linear-gradient(135deg, var(--neon-green), var(--neon-blue)); margin-bottom: 15px;">
+                    <span>📋</span> COPY PROMPT
                 </button>
                 
                 <div id="timerDisplay" style="text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 1.2rem; color: var(--neon-green); margin: 10px 0; display: none;"></div>
@@ -1061,18 +1061,17 @@
                     <textarea 
                         class="response-input" 
                         id="conversationInput" 
-                        placeholder="1. Click COPY CHALLENGE above
-2. Paste it into ChatGPT
-3. Copy ChatGPT's JSON response
-4. Paste it here
+                        placeholder="1. Click COPY PROMPT above
+2. Paste into ChatGPT WITH your conversation transcript
+3. ChatGPT will respond with: IQ2RES::...
+4. Copy that ENTIRE line and paste it here
 5. Click GO / VERIFY"
                         oninput="handleConversationInput()"
                     ></textarea>
                 </div>
                 
                 <p style="text-align: center; color: var(--text-muted); font-size: 0.8rem; margin-top: 10px;">
-                    🔒 Your conversation is analyzed securely. The scoring algorithm is hidden.
-                </p>
+                    🔒 Tamper-proof scoring with cryptographic verification.</p>
 
                 <!-- SHARED: Username + Submit -->
                 <div class="username-section">
@@ -1288,29 +1287,32 @@
             });
         }
 
-        // ===== CHALLENGE FLOW =====
+        // ===== MANUAL MODE FLOW =====
         let currentNonce = null;
+        let currentPrompt = null;
         let challengeExpiresAt = null;
         let challengeTimer = null;
 
-        async function copyChallenge() {
+        async function copyPrompt() {
             const copyBtn = document.getElementById('copyBtn');
             copyBtn.disabled = true;
-            copyBtn.innerHTML = '<span>⏳</span> Getting challenge...';
+            copyBtn.innerHTML = '<span>⏳</span> Getting prompt...';
             
             try {
-                const res = await fetch(`${CONFIG.apiBase}/challenge`);
+                const res = await fetch(`${CONFIG.apiBase}/prompt`);
                 const data = await res.json();
                 
                 if (!data.ok) throw new Error(data.error || 'Failed');
                 
                 currentNonce = data.nonce;
+                currentPrompt = data.prompt;
                 challengeExpiresAt = data.expires_at;
                 
-                await navigator.clipboard.writeText(data.challenge);
+                // Copy the visible prompt
+                await navigator.clipboard.writeText(data.prompt);
                 
-                copyBtn.innerHTML = '<span>✅</span> COPIED! Paste into ChatGPT';
-                showToast('✅ Challenge copied! Now paste it into ChatGPT.');
+                copyBtn.innerHTML = '<span>✅</span> COPIED! Now paste into ChatGPT with your transcript';
+                showToast('✅ Prompt copied! Paste it into ChatGPT along with your conversation.');
                 
                 // Update steps
                 document.getElementById('step1').classList.add('completed');
@@ -1323,7 +1325,7 @@
             } catch (e) {
                 showToast(`❌ ${e.message}`);
                 copyBtn.disabled = false;
-                copyBtn.innerHTML = '<span>📋</span> COPY CHALLENGE';
+                copyBtn.innerHTML = '<span>📋</span> COPY PROMPT';
             }
         }
 
@@ -1338,10 +1340,11 @@
                 
                 if (remaining <= 0) {
                     clearInterval(challengeTimer);
-                    timerEl.textContent = '⏱️ EXPIRED - get new challenge';
+                    timerEl.textContent = '⏱️ EXPIRED - get new prompt';
                     currentNonce = null;
+                    currentPrompt = null;
                     document.getElementById('copyBtn').disabled = false;
-                    document.getElementById('copyBtn').innerHTML = '<span>📋</span> COPY CHALLENGE';
+                    document.getElementById('copyBtn').innerHTML = '<span>📋</span> COPY PROMPT';
                     document.getElementById('submitBtn').disabled = true;
                 }
             }, 1000);
@@ -1379,7 +1382,8 @@
             const username = document.getElementById('usernameInput').value.trim();
             const hasUsername = username.length >= 2;
             const response = document.getElementById('conversationInput')?.value || '';
-            const hasResponse = response.trim().length >= 50;
+            // Look for IQ2RES:: in the response
+            const hasResponse = response.includes('IQ2RES::');
             const hasNonce = !!currentNonce;
             
             document.getElementById('submitBtn').disabled = !(hasResponse && hasUsername && hasNonce);
@@ -1389,7 +1393,14 @@
             if (hasSubmitted) return;
             
             if (!currentNonce) {
-                showToast('❌ Get a challenge first!');
+                showToast('❌ Get a prompt first!');
+                return;
+            }
+            
+            const response = document.getElementById('conversationInput').value.trim();
+            
+            if (!response.includes('IQ2RES::')) {
+                showToast('❌ Response must contain IQ2RES::... from ChatGPT');
                 return;
             }
             
@@ -1404,25 +1415,13 @@
             let sealedToken = null;
             
             try {
-                const response = document.getElementById('conversationInput').value.trim();
-                
-                if (response.length < 50) {
-                    showToast('⚠️ Paste ChatGPT\'s JSON response.');
-                    hasSubmitted = false;
-                    submitBtn.innerHTML = '<span>🚀</span> GO / VERIFY';
-                    return;
-                }
-                
                 showToast('🔐 Verifying response...');
                 
-                // Verify the response
+                // Verify the IQ2RES response
                 const res = await fetch(`${CONFIG.apiBase}/verify`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        nonce: currentNonce,
-                        response: response
-                    })
+                    body: JSON.stringify({ response: response })
                 });
                 
                 const data = await res.json();
@@ -1435,11 +1434,13 @@
                     document.getElementById('timerDisplay').style.display = 'none';
                 } else {
                     let errMsg = data.error || 'Verification failed';
-                    if (errMsg === 'invalid_or_expired_nonce') errMsg = 'Challenge expired. Get a new one.';
-                    if (errMsg === 'nonce_already_used') errMsg = 'Challenge already used. Get a new one.';
-                    if (errMsg === 'invalid_json_response') errMsg = 'Invalid JSON. Paste ChatGPT\'s exact response.';
-                    if (errMsg === 'check_digit_mismatch') errMsg = 'Invalid response format. Try again with ChatGPT.';
-                    if (errMsg.startsWith('missing_key')) errMsg = 'Missing data. Make sure ChatGPT gave all 28 categories.';
+                    if (errMsg === 'invalid_format_expected_IQ2RES') errMsg = 'Response must be IQ2RES::... format';
+                    if (errMsg === 'invalid_or_expired_nonce') errMsg = 'Nonce expired. Get a new prompt.';
+                    if (errMsg === 'nonce_already_used') errMsg = 'Already verified. Get a new prompt.';
+                    if (errMsg === 'invalid_base64url') errMsg = 'Invalid encoding. Copy exact response from ChatGPT.';
+                    if (errMsg === 'check_digit_mismatch') errMsg = 'Check digit failed. Ask ChatGPT to try again.';
+                    if (errMsg.startsWith('missing_key')) errMsg = 'Missing category. Ask ChatGPT to include all 28.';
+                    if (errMsg.startsWith('not_4_decimals')) errMsg = 'Scores need exactly 4 decimals. Ask ChatGPT to fix.';
                     
                     showToast(`❌ ${errMsg}`);
                     hasSubmitted = false;
