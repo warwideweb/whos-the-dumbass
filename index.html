@@ -834,8 +834,8 @@
             gap: 10px;
         }
         
-        /* Quick Boost Buttons */
-        .quick-boost-btn {
+        /* Boost Tier Buttons */
+        .boost-tier-btn {
             background: var(--bg-card);
             border: 2px solid var(--border-color);
             border-radius: 12px;
@@ -843,19 +843,57 @@
             transition: all 0.2s ease;
         }
         
-        .quick-boost-btn:hover {
-            transform: scale(1.05);
-            border-color: var(--neon-green);
+        .boost-tier-btn:hover {
+            transform: scale(1.02);
             box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
         }
         
-        .quick-boost-btn.whale:hover {
-            border-color: #ffd700;
-            box-shadow: 0 0 25px rgba(255, 215, 0, 0.4);
+        .boost-tier-btn:active {
+            transform: scale(0.98);
         }
         
-        .quick-boost-btn.popular {
-            border-color: #8b5cf6;
+        /* Mobile Responsive */
+        @media (max-width: 600px) {
+            #boostAmountGrid {
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 10px !important;
+                padding: 0 10px;
+            }
+            
+            .boost-tier-btn {
+                padding: 15px 10px !important;
+            }
+            
+            .boost-tier-btn div:first-child {
+                font-size: 1.5rem !important;
+            }
+            
+            .boost-tier-btn div:nth-child(2) {
+                font-size: 1.2rem !important;
+            }
+            
+            .payment-section {
+                padding: 20px 15px !important;
+            }
+            
+            .payment-section h2 {
+                font-size: 1.3rem !important;
+            }
+            
+            #boostUsername, #boostUrl {
+                font-size: 0.9rem !important;
+                padding: 14px !important;
+            }
+            
+            #phantomBtn, #metamaskBtn {
+                padding: 14px 10px !important;
+                font-size: 0.85rem !important;
+            }
+            
+            #submitBoostBtn {
+                padding: 16px !important;
+                font-size: 1rem !important;
+            }
         }
 
         .wallet-display {
@@ -1329,156 +1367,79 @@
             </div>
         </section>
 
-        <!-- Payment Section -->
+        <!-- Payment Section - Clean & Mobile Friendly -->
         <section class="container">
             <div class="payment-section">
                 <h2>💎 Boost Your Ranking</h2>
-                <p class="payment-subtitle">Can't be smart? Be rich. Pay to climb the leaderboard and flex on the actual geniuses.</p>
+                <p class="payment-subtitle">Can't be smart? Be rich. Pay to climb the leaderboard.</p>
                 
-                <!-- Tier Info -->
-                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 20px 0; text-align: center;">
-                    <div style="background: var(--bg-card); padding: 15px 10px; border-radius: 12px; border: 1px solid #3a3a4a;">
-                        <div style="font-size: 1.5rem;">💸</div>
-                        <div style="font-weight: 700; margin: 5px 0;">$10+</div>
-                        <div style="font-size: 0.7rem; color: var(--text-muted);">Poor & Dumb</div>
-                    </div>
-                    <div style="background: var(--bg-card); padding: 15px 10px; border-radius: 12px; border: 1px solid #2a5298;">
-                        <div style="font-size: 1.5rem;">🌍</div>
-                        <div style="font-weight: 700; margin: 5px 0; color: #7eb8ff;">$50+</div>
-                        <div style="font-size: 0.7rem; color: var(--text-muted);">First World Poor</div>
-                    </div>
-                    <div style="background: var(--bg-card); padding: 15px 10px; border-radius: 12px; border: 1px solid #8b5cf6;">
-                        <div style="font-size: 1.5rem;">🐋</div>
-                        <div style="font-weight: 700; margin: 5px 0; color: #8b5cf6;">$100+</div>
-                        <div style="font-size: 0.7rem; color: var(--text-muted);">Dumbass Whale</div>
-                    </div>
-                    <div style="background: linear-gradient(135deg, rgba(255,215,0,0.1), rgba(255,140,0,0.1)); padding: 15px 10px; border-radius: 12px; border: 2px solid #ffd700;">
-                        <div style="font-size: 1.5rem;">👑</div>
-                        <div style="font-weight: 700; margin: 5px 0; color: #ffd700;">$1000+</div>
-                        <div style="font-size: 0.7rem; color: #ffd700;">IQ Slave Owner</div>
-                        <div style="font-size: 0.6rem; color: var(--neon-green); margin-top: 3px;">TOP SPOT!</div>
+                <!-- Step 1: Enter Info -->
+                <div style="max-width: 500px; margin: 30px auto;">
+                    <input type="text" id="boostUsername" placeholder="@Username (required)" 
+                        style="width: 100%; padding: 16px; background: var(--bg-primary); border: 2px solid var(--border-color); border-radius: 12px; color: #fff; font-size: 1rem; text-align: center; margin-bottom: 12px;">
+                    <input type="text" id="boostUrl" placeholder="Your URL (optional - shows on leaderboard)" 
+                        style="width: 100%; padding: 14px; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 12px; color: #fff; font-size: 0.9rem; text-align: center;">
+                </div>
+                
+                <!-- Step 2: Select Amount -->
+                <div id="boostAmountGrid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; max-width: 500px; margin: 20px auto;">
+                    <button onclick="selectBoostAmount(10)" class="boost-tier-btn" data-amount="10" 
+                        style="padding: 20px 15px; background: var(--bg-card); border: 2px solid #3a3a4a; border-radius: 12px; cursor: pointer; transition: all 0.2s; text-align: center;">
+                        <div style="font-size: 1.8rem;">💸</div>
+                        <div style="font-size: 1.4rem; font-weight: 700; color: #fff; margin: 8px 0;">$10</div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted);">Poor & Dumb</div>
+                    </button>
+                    <button onclick="selectBoostAmount(50)" class="boost-tier-btn" data-amount="50"
+                        style="padding: 20px 15px; background: var(--bg-card); border: 2px solid #2a5298; border-radius: 12px; cursor: pointer; transition: all 0.2s; text-align: center;">
+                        <div style="font-size: 1.8rem;">🌍</div>
+                        <div style="font-size: 1.4rem; font-weight: 700; color: #7eb8ff; margin: 8px 0;">$50</div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted);">First World Poor</div>
+                    </button>
+                    <button onclick="selectBoostAmount(100)" class="boost-tier-btn" data-amount="100"
+                        style="padding: 20px 15px; background: var(--bg-card); border: 2px solid #8b5cf6; border-radius: 12px; cursor: pointer; transition: all 0.2s; text-align: center; position: relative;">
+                        <div style="position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: var(--neon-green); color: #000; font-size: 0.65rem; padding: 3px 10px; border-radius: 4px; font-weight: 700;">POPULAR</div>
+                        <div style="font-size: 1.8rem;">🐋</div>
+                        <div style="font-size: 1.4rem; font-weight: 700; color: #8b5cf6; margin: 8px 0;">$100</div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted);">Dumbass Whale</div>
+                    </button>
+                    <button onclick="selectBoostAmount(1000)" class="boost-tier-btn" data-amount="1000"
+                        style="padding: 20px 15px; background: linear-gradient(135deg, rgba(255,215,0,0.1), rgba(255,140,0,0.1)); border: 2px solid #ffd700; border-radius: 12px; cursor: pointer; transition: all 0.2s; text-align: center;">
+                        <div style="font-size: 1.8rem;">👑</div>
+                        <div style="font-size: 1.4rem; font-weight: 700; color: #ffd700; margin: 8px 0;">$1000</div>
+                        <div style="font-size: 0.8rem; color: #ffd700;">IQ Slave Owner</div>
+                    </button>
+                </div>
+                
+                <!-- Selected Amount Display -->
+                <div id="selectedAmountDisplay" style="display: none; text-align: center; margin: 20px auto; padding: 15px; background: var(--bg-card); border-radius: 12px; max-width: 500px; border: 2px solid var(--neon-green);">
+                    <span style="color: var(--text-muted);">Selected:</span>
+                    <span id="selectedAmountText" style="font-size: 1.5rem; font-weight: 700; color: var(--neon-green); margin-left: 10px;">$0</span>
+                </div>
+                
+                <!-- Step 3: Connect Wallet -->
+                <div style="max-width: 500px; margin: 20px auto;">
+                    <p style="text-align: center; color: var(--text-muted); font-size: 0.9rem; margin-bottom: 15px;">Connect wallet to pay:</p>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <button id="phantomBtn" onclick="connectAndPay('phantom')" 
+                            style="padding: 16px; background: linear-gradient(135deg, #9945FF, #14F195); color: #fff; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 0.95rem; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                            <span style="font-size: 1.2rem;">👻</span> Phantom
+                        </button>
+                        <button id="metamaskBtn" onclick="connectAndPay('metamask')" 
+                            style="padding: 16px; background: linear-gradient(135deg, #f6851b, #e2761b); color: #fff; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 0.95rem; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                            <span style="font-size: 1.2rem;">🦊</span> Metamask
+                        </button>
                     </div>
                 </div>
                 
-                <div class="payment-grid">
-                    <div class="payment-card">
-                        <h3>☀️ Pay with SOL</h3>
-                        
-                        <!-- Wallet Connection -->
-                        <div id="walletSection">
-                            <button id="connectWalletBtn" onclick="connectWallet()" style="width: 100%; padding: 12px; background: linear-gradient(135deg, #9945FF, #14F195); color: #fff; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 1rem; margin-bottom: 15px;">
-                                🔗 Connect Phantom Wallet
-                            </button>
-                            <p id="walletStatus" style="text-align: center; color: var(--text-muted); font-size: 0.85rem;"></p>
-                        </div>
-                        
-                        <!-- After Connected -->
-                        <div id="paymentForm" style="display: none;">
-                            <p style="color: var(--neon-green); font-size: 0.9rem; margin-bottom: 10px;">✅ Connected: <span id="connectedWallet"></span></p>
-                            
-                            <div class="amount-input-group">
-                                <input type="number" class="amount-input" id="solAmount" placeholder="Amount in SOL" step="0.01" min="0.01" oninput="updateBoostPreview('sol')">
-                                <div class="currency-badge">
-                                    <span>◎</span> SOL
-                                </div>
-                            </div>
-                            <div class="boost-preview">
-                                <div class="boost-preview-label">Ranking Boost</div>
-                                <div class="boost-preview-value" id="solBoost">+0 positions</div>
-                            </div>
-                            
-                            <div class="tier-preview" id="tierPreview" style="margin: 15px 0; padding: 12px; background: var(--bg-card); border-radius: 8px; text-align: center;">
-                                <div style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 5px;">You'll get:</div>
-                                <div id="tierBadgePreview" style="font-size: 1rem;">💸 Poor and Dumb ($10+)</div>
-                            </div>
-                            
-                            <div style="margin: 15px 0;">
-                                <label style="display: block; color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 8px;">🔗 Your URL (optional - shows on leaderboard):</label>
-                                <input type="text" id="boostUrlInput" placeholder="twitter.com/yourhandle or any URL" style="width: 100%; padding: 12px; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 8px; color: #fff; font-size: 0.9rem;">
-                            </div>
-                            
-                            <button id="payBtn" onclick="sendPayment()" style="width: 100%; padding: 12px; background: var(--neon-green); color: #000; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 1rem; margin-top: 10px;">
-                                💸 Send Payment
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="payment-card">
-                        <h3>🦊 Connect with Metamask</h3>
-                        
-                        <!-- Metamask Wallet Connection -->
-                        <div id="metamaskSection">
-                            <button id="connectMetamaskBtn" onclick="connectMetamask()" style="width: 100%; padding: 12px; background: linear-gradient(135deg, #f6851b, #e2761b); color: #fff; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 1rem; margin-bottom: 15px;">
-                                🦊 Connect Metamask
-                            </button>
-                            <p id="metamaskStatus" style="text-align: center; color: var(--text-muted); font-size: 0.85rem;"></p>
-                        </div>
-                        
-                        <!-- After Metamask Connected -->
-                        <div id="metamaskPaymentForm" style="display: none;">
-                            <p style="color: var(--neon-green); font-size: 0.9rem; margin-bottom: 10px;">✅ Connected: <span id="connectedMetamask"></span></p>
-                            
-                            <div class="amount-input-group">
-                                <input type="number" class="amount-input" id="ethAmount" placeholder="Amount in ETH" step="0.001" min="0.001" oninput="updateBoostPreview('eth')">
-                                <div class="currency-badge">
-                                    <span>Ξ</span> ETH
-                                </div>
-                            </div>
-                            <div class="boost-preview">
-                                <div class="boost-preview-label">Ranking Boost</div>
-                                <div class="boost-preview-value" id="ethBoost">+0 positions</div>
-                            </div>
-                            
-                            <div style="margin: 15px 0;">
-                                <label style="display: block; color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 8px;">🔗 Your URL (optional):</label>
-                                <input type="text" id="metamaskUrlInput" placeholder="twitter.com/yourhandle or any URL" style="width: 100%; padding: 12px; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 8px; color: #fff; font-size: 0.9rem;">
-                            </div>
-                            
-                            <button id="ethPayBtn" onclick="sendEthPayment()" style="width: 100%; padding: 12px; background: #f6851b; color: #fff; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 1rem; margin-top: 10px;">
-                                💸 Send ETH Payment
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                <!-- Wallet Status -->
+                <p id="walletStatusText" style="text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-top: 15px;"></p>
                 
-                <!-- Quick Boost Buttons -->
-                <div style="margin-top: 30px;">
-                    <h3 style="text-align: center; margin-bottom: 15px; color: var(--text-secondary);">⚡ Quick Boost</h3>
-                    <p style="text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 20px;">Click an amount to connect wallet and boost instantly</p>
-                    
-                    <!-- Username Input -->
-                    <div style="max-width: 400px; margin: 0 auto 20px;">
-                        <input type="text" id="quickBoostUsername" placeholder="@Username (required)" style="width: 100%; padding: 14px; background: var(--bg-primary); border: 2px solid var(--border-color); border-radius: 10px; color: #fff; font-size: 1rem; text-align: center;">
-                    </div>
-                    
-                    <!-- URL Input -->
-                    <div style="max-width: 400px; margin: 0 auto 20px;">
-                        <input type="text" id="quickBoostUrl" placeholder="Your URL (optional - shows on leaderboard)" style="width: 100%; padding: 14px; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 10px; color: #fff; font-size: 0.9rem; text-align: center;">
-                    </div>
-                    
-                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; max-width: 600px; margin: 0 auto;">
-                        <button onclick="quickBoost(10)" class="quick-boost-btn" style="padding: 20px; background: var(--bg-card); border: 2px solid #3a3a4a; border-radius: 12px; cursor: pointer; transition: all 0.2s;">
-                            <div style="font-size: 1.5rem; margin-bottom: 5px;">💸</div>
-                            <div style="font-size: 1.2rem; font-weight: 700; color: #fff;">$10</div>
-                            <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 3px;">Poor & Dumb</div>
-                        </button>
-                        <button onclick="quickBoost(50)" class="quick-boost-btn" style="padding: 20px; background: var(--bg-card); border: 2px solid #2a5298; border-radius: 12px; cursor: pointer; transition: all 0.2s;">
-                            <div style="font-size: 1.5rem; margin-bottom: 5px;">🌍</div>
-                            <div style="font-size: 1.2rem; font-weight: 700; color: #7eb8ff;">$50</div>
-                            <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 3px;">First World Poor</div>
-                        </button>
-                        <button onclick="quickBoost(100)" class="quick-boost-btn popular" style="padding: 20px; background: var(--bg-card); border: 2px solid #8b5cf6; border-radius: 12px; cursor: pointer; transition: all 0.2s; position: relative;">
-                            <div style="position: absolute; top: -8px; left: 50%; transform: translateX(-50%); background: var(--neon-green); color: #000; font-size: 0.6rem; padding: 2px 8px; border-radius: 4px; font-weight: 700;">POPULAR</div>
-                            <div style="font-size: 1.5rem; margin-bottom: 5px;">🐋</div>
-                            <div style="font-size: 1.2rem; font-weight: 700; color: #8b5cf6;">$100</div>
-                            <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 3px;">Dumbass Whale</div>
-                        </button>
-                        <button onclick="quickBoost(1000)" class="quick-boost-btn whale" style="padding: 20px; background: linear-gradient(135deg, rgba(255,215,0,0.15), rgba(255,140,0,0.15)); border: 2px solid #ffd700; border-radius: 12px; cursor: pointer; transition: all 0.2s;">
-                            <div style="font-size: 1.5rem; margin-bottom: 5px;">👑</div>
-                            <div style="font-size: 1.2rem; font-weight: 700; color: #ffd700;">$1000</div>
-                            <div style="font-size: 0.7rem; color: #ffd700; margin-top: 3px;">IQ Slave Owner</div>
-                        </button>
-                    </div>
+                <!-- Submit Button (appears after wallet connected) -->
+                <div id="submitBoostSection" style="display: none; max-width: 500px; margin: 20px auto;">
+                    <button id="submitBoostBtn" onclick="submitBoostPayment()" 
+                        style="width: 100%; padding: 18px; background: var(--neon-green); color: #000; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 1.1rem;">
+                        💸 PAY & BOOST
+                    </button>
                 </div>
             </div>
         </section>
@@ -2345,152 +2306,240 @@
             payBtn.disabled = false;
         }
 
-        // ===== METAMASK WALLET =====
-        let connectedMetamaskWallet = null;
-        const ETH_RECEIVING_WALLET = "0x742d35Cc6634C0532925a3b844Bc9e7595f00000"; // Replace with actual ETH address
+        // ===== UNIFIED BOOST SYSTEM =====
+        let selectedBoostAmount = null;
+        let connectedWalletType = null; // 'phantom' or 'metamask'
+        let connectedWalletAddress = null;
         
-        async function connectMetamask() {
-            const statusEl = document.getElementById('metamaskStatus');
-            const connectBtn = document.getElementById('connectMetamaskBtn');
+        const SOL_RECEIVING_WALLET = "AriTQL1mpcBg8bSnmuZn7u1sHF8XZQmCmLDgt5NsYSLw";
+        const ETH_RECEIVING_WALLET = "0x742d35Cc6634C0532925a3b844Bc9e7595f00000"; // Replace with actual
+        const SOL_PRICE = 150; // USD per SOL
+        const ETH_PRICE = 3500; // USD per ETH
+        
+        function selectBoostAmount(amount) {
+            selectedBoostAmount = amount;
             
-            try {
-                // Check if MetaMask is installed
-                if (typeof window.ethereum === 'undefined') {
-                    statusEl.innerHTML = '❌ MetaMask not found. <a href="https://metamask.io/download/" target="_blank" style="color: #f6851b;">Install MetaMask</a>';
-                    return;
-                }
-
-                connectBtn.textContent = '⏳ Connecting...';
-                connectBtn.disabled = true;
-
-                // Request account access
-                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-                connectedMetamaskWallet = accounts[0];
-                
-                // Show connected state
-                document.getElementById('metamaskSection').querySelector('button').style.display = 'none';
-                document.getElementById('metamaskPaymentForm').style.display = 'block';
-                document.getElementById('connectedMetamask').textContent = connectedMetamaskWallet.substring(0, 6) + '...' + connectedMetamaskWallet.substring(connectedMetamaskWallet.length - 4);
-                
-                showToast('✅ MetaMask connected!');
-                
-            } catch (e) {
-                statusEl.textContent = '❌ Connection failed: ' + e.message;
-                connectBtn.textContent = '🦊 Connect Metamask';
-                connectBtn.disabled = false;
+            // Highlight selected button
+            document.querySelectorAll('.boost-tier-btn').forEach(btn => {
+                btn.style.transform = 'scale(1)';
+                btn.style.boxShadow = 'none';
+                btn.style.borderWidth = '2px';
+            });
+            
+            const selectedBtn = document.querySelector(`.boost-tier-btn[data-amount="${amount}"]`);
+            if (selectedBtn) {
+                selectedBtn.style.transform = 'scale(1.02)';
+                selectedBtn.style.boxShadow = '0 0 25px var(--neon-green)';
+                selectedBtn.style.borderColor = 'var(--neon-green)';
             }
+            
+            // Show selected amount
+            document.getElementById('selectedAmountDisplay').style.display = 'block';
+            document.getElementById('selectedAmountText').textContent = '$' + amount;
+            
+            showToast(`$${amount} selected! Now connect wallet below 👇`);
         }
         
-        async function sendEthPayment() {
-            if (!connectedMetamaskWallet) {
-                showToast('❌ Connect MetaMask first');
-                return;
-            }
-
-            const amount = parseFloat(document.getElementById('ethAmount').value);
-            if (!amount || amount < 0.001) {
-                showToast('❌ Enter amount (min 0.001 ETH)');
-                return;
-            }
-
-            const userId = localStorage.getItem('wtd_user_id');
-            if (!userId) {
-                showToast('❌ Take the IQ test first to get a user ID');
-                return;
-            }
-
-            const payBtn = document.getElementById('ethPayBtn');
-            payBtn.textContent = '⏳ Processing...';
-            payBtn.disabled = true;
-
-            try {
-                const weiAmount = '0x' + Math.floor(amount * 1e18).toString(16);
-                
-                const txHash = await window.ethereum.request({
-                    method: 'eth_sendTransaction',
-                    params: [{
-                        from: connectedMetamaskWallet,
-                        to: ETH_RECEIVING_WALLET,
-                        value: weiAmount,
-                    }],
-                });
-                
-                showToast('⏳ Transaction sent! Hash: ' + txHash.substring(0, 20) + '...');
-                
-                // Get the URL from the input
-                const boostUrl = document.getElementById('metamaskUrlInput')?.value?.trim() || '';
-                
-                // Calculate USD value (~$3500 per ETH)
-                const usdValue = Math.round(amount * 3500);
-                
-                // Register boost with our backend
-                const boostRes = await fetch(`${CONFIG.apiBase}/boost`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        userId, 
-                        amount: usdValue,
-                        link: boostUrl || undefined,
-                        txSignature: txHash
-                    })
-                });
-
-                const boostData = await boostRes.json();
-
-                if (boostData.ok) {
-                    let msg = `✅ Payment verified! $${usdValue} boost!`;
-                    if (boostData.badge) {
-                        msg += ` ${boostData.badge.label}`;
-                    }
-                    showToast(msg);
-                    loadLeaderboard();
-                } else {
-                    showToast('⚠️ Payment sent but boost pending. Contact support with tx: ' + txHash);
-                }
-
-            } catch (e) {
-                showToast('❌ ' + (e.message || 'Transaction failed'));
-            }
-
-            payBtn.textContent = '💸 Send ETH Payment';
-            payBtn.disabled = false;
-        }
-        
-        // ===== QUICK BOOST =====
-        let selectedQuickBoostAmount = null;
-        
-        async function quickBoost(amount) {
-            const username = document.getElementById('quickBoostUsername')?.value?.trim();
-            const url = document.getElementById('quickBoostUrl')?.value?.trim();
-            
+        async function connectAndPay(walletType) {
+            const username = document.getElementById('boostUsername')?.value?.trim();
             if (!username || username.length < 2) {
                 showToast('❌ Enter your @Username first');
-                document.getElementById('quickBoostUsername').focus();
+                document.getElementById('boostUsername').focus();
                 return;
             }
             
-            selectedQuickBoostAmount = amount;
+            if (!selectedBoostAmount) {
+                showToast('❌ Select an amount first');
+                return;
+            }
             
-            // Check if user has a user ID from taking the test
             const userId = localStorage.getItem('wtd_user_id');
             if (!userId) {
                 showToast('❌ Take the IQ test first, then come back to boost');
                 return;
             }
             
-            // Highlight selected button
-            document.querySelectorAll('.quick-boost-btn').forEach(btn => {
-                btn.style.transform = 'scale(1)';
-                btn.style.boxShadow = 'none';
+            const statusEl = document.getElementById('walletStatusText');
+            
+            if (walletType === 'phantom') {
+                await connectPhantomWallet(statusEl);
+            } else if (walletType === 'metamask') {
+                await connectMetamaskWallet(statusEl);
+            }
+        }
+        
+        async function connectPhantomWallet(statusEl) {
+            try {
+                if (!window.solana || !window.solana.isPhantom) {
+                    statusEl.innerHTML = '❌ Phantom not found. <a href="https://phantom.app" target="_blank" style="color: #9945FF;">Install Phantom</a>';
+                    return;
+                }
+                
+                document.getElementById('phantomBtn').textContent = '⏳ Connecting...';
+                
+                const response = await window.solana.connect();
+                connectedWalletAddress = response.publicKey.toString();
+                connectedWalletType = 'phantom';
+                
+                const shortAddr = connectedWalletAddress.substring(0, 4) + '...' + connectedWalletAddress.substring(connectedWalletAddress.length - 4);
+                document.getElementById('phantomBtn').innerHTML = `<span style="font-size: 1.2rem;">✅</span> ${shortAddr}`;
+                statusEl.textContent = '✅ Phantom connected! Click PAY & BOOST to complete.';
+                statusEl.style.color = 'var(--neon-green)';
+                
+                // Show submit button
+                document.getElementById('submitBoostSection').style.display = 'block';
+                showToast('✅ Wallet connected! Click PAY & BOOST');
+                
+            } catch (e) {
+                statusEl.textContent = '❌ ' + e.message;
+                document.getElementById('phantomBtn').innerHTML = '<span style="font-size: 1.2rem;">👻</span> Phantom';
+            }
+        }
+        
+        async function connectMetamaskWallet(statusEl) {
+            try {
+                if (typeof window.ethereum === 'undefined') {
+                    statusEl.innerHTML = '❌ MetaMask not found. <a href="https://metamask.io/download/" target="_blank" style="color: #f6851b;">Install MetaMask</a>';
+                    return;
+                }
+                
+                document.getElementById('metamaskBtn').textContent = '⏳ Connecting...';
+                
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                connectedWalletAddress = accounts[0];
+                connectedWalletType = 'metamask';
+                
+                const shortAddr = connectedWalletAddress.substring(0, 6) + '...' + connectedWalletAddress.substring(connectedWalletAddress.length - 4);
+                document.getElementById('metamaskBtn').innerHTML = `<span style="font-size: 1.2rem;">✅</span> ${shortAddr}`;
+                statusEl.textContent = '✅ MetaMask connected! Click PAY & BOOST to complete.';
+                statusEl.style.color = 'var(--neon-green)';
+                
+                // Show submit button
+                document.getElementById('submitBoostSection').style.display = 'block';
+                showToast('✅ Wallet connected! Click PAY & BOOST');
+                
+            } catch (e) {
+                statusEl.textContent = '❌ ' + e.message;
+                document.getElementById('metamaskBtn').innerHTML = '<span style="font-size: 1.2rem;">🦊</span> Metamask';
+            }
+        }
+        
+        async function submitBoostPayment() {
+            if (!connectedWalletAddress || !connectedWalletType) {
+                showToast('❌ Connect wallet first');
+                return;
+            }
+            
+            if (!selectedBoostAmount) {
+                showToast('❌ Select an amount first');
+                return;
+            }
+            
+            const userId = localStorage.getItem('wtd_user_id');
+            if (!userId) {
+                showToast('❌ Take the IQ test first');
+                return;
+            }
+            
+            const username = document.getElementById('boostUsername')?.value?.trim();
+            const url = document.getElementById('boostUrl')?.value?.trim();
+            
+            const submitBtn = document.getElementById('submitBoostBtn');
+            submitBtn.textContent = '⏳ Processing...';
+            submitBtn.disabled = true;
+            
+            try {
+                let txSignature;
+                
+                if (connectedWalletType === 'phantom') {
+                    // Calculate SOL amount
+                    const solAmount = selectedBoostAmount / SOL_PRICE;
+                    txSignature = await sendSolTransaction(solAmount);
+                } else if (connectedWalletType === 'metamask') {
+                    // Calculate ETH amount
+                    const ethAmount = selectedBoostAmount / ETH_PRICE;
+                    txSignature = await sendEthTransaction(ethAmount);
+                }
+                
+                if (!txSignature) {
+                    throw new Error('Transaction failed');
+                }
+                
+                showToast('⏳ Transaction sent! Verifying...');
+                
+                // Register boost with backend
+                const boostRes = await fetch(`${CONFIG.apiBase}/boost`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        userId, 
+                        amount: selectedBoostAmount,
+                        link: url || undefined,
+                        txSignature,
+                        username
+                    })
+                });
+                
+                const boostData = await boostRes.json();
+                
+                if (boostData.ok) {
+                    let msg = `✅ BOOSTED! $${selectedBoostAmount}`;
+                    if (boostData.badge) msg += ` - ${boostData.badge.label}`;
+                    showToast(msg);
+                    loadLeaderboard();
+                } else {
+                    showToast('⚠️ Payment sent! Boost pending verification.');
+                }
+                
+            } catch (e) {
+                showToast('❌ ' + (e.message || 'Transaction failed'));
+            }
+            
+            submitBtn.textContent = '💸 PAY & BOOST';
+            submitBtn.disabled = false;
+        }
+        
+        async function sendSolTransaction(amount) {
+            // Simplified - shows address to send to
+            // Full implementation needs @solana/web3.js
+            const lamports = Math.floor(amount * 1e9);
+            
+            try {
+                if (window.solanaWeb3) {
+                    const { Connection, PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } = window.solanaWeb3;
+                    const connection = new Connection('https://api.mainnet-beta.solana.com');
+                    const fromPubkey = new PublicKey(connectedWalletAddress);
+                    const toPubkey = new PublicKey(SOL_RECEIVING_WALLET);
+                    
+                    const transaction = new Transaction().add(
+                        SystemProgram.transfer({ fromPubkey, toPubkey, lamports: Math.floor(amount * LAMPORTS_PER_SOL) })
+                    );
+                    transaction.feePayer = fromPubkey;
+                    transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
+                    
+                    const signed = await window.solana.signTransaction(transaction);
+                    return await connection.sendRawTransaction(signed.serialize());
+                } else {
+                    // Fallback - just show address
+                    showToast(`Send ${amount.toFixed(4)} SOL to: ${SOL_RECEIVING_WALLET}`);
+                    return 'manual_' + Date.now();
+                }
+            } catch (e) {
+                throw e;
+            }
+        }
+        
+        async function sendEthTransaction(amount) {
+            const weiAmount = '0x' + Math.floor(amount * 1e18).toString(16);
+            
+            return await window.ethereum.request({
+                method: 'eth_sendTransaction',
+                params: [{
+                    from: connectedWalletAddress,
+                    to: ETH_RECEIVING_WALLET,
+                    value: weiAmount,
+                }],
             });
-            event.target.closest('.quick-boost-btn').style.transform = 'scale(1.05)';
-            event.target.closest('.quick-boost-btn').style.boxShadow = '0 0 20px var(--neon-green)';
-            
-            // Prompt to connect wallet
-            showToast(`$${amount} selected! Connect Phantom or MetaMask above to pay 👆`);
-            
-            // Scroll to wallet section
-            document.querySelector('.payment-grid').scrollIntoView({ behavior: 'smooth' });
         }
 
         // ===== BOOST PREVIEW =====
