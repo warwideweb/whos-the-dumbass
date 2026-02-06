@@ -1312,6 +1312,31 @@
                 <h2>💎 Boost Your Ranking</h2>
                 <p class="payment-subtitle">Can't be smart? Be rich. Pay to climb the leaderboard and flex on the actual geniuses.</p>
                 
+                <!-- Tier Info -->
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 20px 0; text-align: center;">
+                    <div style="background: var(--bg-card); padding: 15px 10px; border-radius: 12px; border: 1px solid #3a3a4a;">
+                        <div style="font-size: 1.5rem;">💸</div>
+                        <div style="font-weight: 700; margin: 5px 0;">$10+</div>
+                        <div style="font-size: 0.7rem; color: var(--text-muted);">Poor & Dumb</div>
+                    </div>
+                    <div style="background: var(--bg-card); padding: 15px 10px; border-radius: 12px; border: 1px solid #2a5298;">
+                        <div style="font-size: 1.5rem;">🌍</div>
+                        <div style="font-weight: 700; margin: 5px 0; color: #7eb8ff;">$50+</div>
+                        <div style="font-size: 0.7rem; color: var(--text-muted);">First World Poor</div>
+                    </div>
+                    <div style="background: var(--bg-card); padding: 15px 10px; border-radius: 12px; border: 1px solid #8b5cf6;">
+                        <div style="font-size: 1.5rem;">🐋</div>
+                        <div style="font-weight: 700; margin: 5px 0; color: #8b5cf6;">$100+</div>
+                        <div style="font-size: 0.7rem; color: var(--text-muted);">Dumbass Whale</div>
+                    </div>
+                    <div style="background: linear-gradient(135deg, rgba(255,215,0,0.1), rgba(255,140,0,0.1)); padding: 15px 10px; border-radius: 12px; border: 2px solid #ffd700;">
+                        <div style="font-size: 1.5rem;">👑</div>
+                        <div style="font-weight: 700; margin: 5px 0; color: #ffd700;">$1000+</div>
+                        <div style="font-size: 0.7rem; color: #ffd700;">IQ Slave Owner</div>
+                        <div style="font-size: 0.6rem; color: var(--neon-green); margin-top: 3px;">TOP SPOT!</div>
+                    </div>
+                </div>
+                
                 <div class="payment-grid">
                     <div class="payment-card">
                         <h3>☀️ Pay with SOL</h3>
@@ -1409,12 +1434,17 @@
 
     <!-- 140+ Link Posting Popup -->
     <div id="linkPopupOverlay" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 2000; align-items: center; justify-content: center;">
-        <div id="linkPopupContent" style="background: var(--bg-card); border: 2px solid var(--neon-purple); border-radius: 20px; padding: 40px; max-width: 450px; text-align: center; position: relative;">
-            <h3 id="linkPopupTitle" style="font-size: 1.5rem; margin-bottom: 16px; color: var(--neon-green);">🎉 You're not that big of a dumbass.</h3>
-            <p id="linkPopupBody" style="color: var(--text-secondary); margin-bottom: 24px;">You unlocked link posting. Add your link to the leaderboard.</p>
+        <div id="linkPopupContent" style="background: var(--bg-card); border: 2px solid var(--neon-green); border-radius: 20px; padding: 40px; max-width: 450px; text-align: center; position: relative;">
+            <h3 id="linkPopupTitle" style="font-size: 1.5rem; margin-bottom: 16px; color: var(--neon-green);">🧠 GENIUS UNLOCKED!</h3>
+            <p id="linkPopupBody" style="color: var(--text-secondary); margin-bottom: 24px;">You unlocked link posting!</p>
             <div id="linkInputSection">
-                <input type="text" id="linkPopupInput" placeholder="https://twitter.com/yourhandle" style="width: 100%; padding: 14px 18px; background: var(--bg-primary); border: 2px solid var(--border-color); border-radius: 10px; color: var(--text-primary); font-size: 1rem; margin-bottom: 16px;">
-                <button onclick="saveLinkFromPopup()" style="width: 100%; padding: 14px; background: var(--neon-green); color: var(--bg-primary); border: none; border-radius: 10px; font-weight: 700; font-size: 1rem; cursor: pointer;">Save Link</button>
+                <label style="display: block; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 8px; text-align: left;">Your URL (optional):</label>
+                <input type="text" id="linkPopupInput" placeholder="twitter.com/yourhandle or any URL" style="width: 100%; padding: 14px 18px; background: var(--bg-primary); border: 2px solid var(--border-color); border-radius: 10px; color: var(--text-primary); font-size: 1rem; margin-bottom: 16px;">
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="saveLinkFromPopup()" style="flex: 1; padding: 14px; background: var(--neon-green); color: var(--bg-primary); border: none; border-radius: 10px; font-weight: 700; font-size: 1rem; cursor: pointer;">💾 Save Link</button>
+                    <button onclick="closePopup()" style="flex: 1; padding: 14px; background: var(--bg-secondary); color: var(--text-secondary); border: 1px solid var(--border-color); border-radius: 10px; font-weight: 600; font-size: 1rem; cursor: pointer;">Skip for Now</button>
+                </div>
+                <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 12px;">You can always add/edit your link later from your profile.</p>
             </div>
             <button onclick="closePopup()" style="position: absolute; top: 16px; right: 16px; background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer;">✕</button>
         </div>
@@ -1761,6 +1791,9 @@
         }
 
         function processResult(iq, username = 'Anonymous', highIQ = false, dna2Token = null) {
+            // SCROLL TO TOP FIRST
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
             // Update display
             updateIQDisplay(iq);
             
@@ -1793,25 +1826,26 @@
                 titleEl.style.color = 'var(--neon-green)';
                 msgEl.textContent = 'Wow. You\'re actually smart. IQ 140+ unlocks link posting!';
                 triggerConfetti();
-                // Show popup after a short delay
-                setTimeout(() => showLinkPopup(iq), 500);
+                // Show URL popup ONLY for 140+ IQ
+                setTimeout(() => showLinkPopup(iq), 1000);
             } else if (iq >= 130) {
                 titleEl.textContent = '🎉 SMART!';
                 titleEl.style.color = 'var(--neon-green)';
-                msgEl.textContent = 'You\'re actually smart. Not quite genius, but close.';
+                msgEl.textContent = 'You\'re actually smart. Not quite genius, but close. Get 140+ for link posting!';
                 triggerConfetti();
-                setTimeout(() => showLinkPopup(iq), 500);
             } else if (iq >= 100) {
                 titleEl.textContent = '😐 AVERAGE';
                 titleEl.style.color = 'var(--neon-yellow)';
                 msgEl.textContent = 'You\'re... fine. Average. Mediocre. Nothing special.';
-                setTimeout(() => showLinkPopup(iq), 500);
             } else {
                 titleEl.textContent = '💀 DUMBASS CONFIRMED';
                 titleEl.style.color = 'var(--neon-red)';
                 msgEl.textContent = 'Congratulations! You\'re officially the dumbass.';
-                setTimeout(() => showLinkPopup(iq), 500);
             }
+            
+            // Refresh leaderboard to show new score
+            loadLeaderboard();
+            loadStats();
         }
         
         function copyDna2Token() {
@@ -2257,13 +2291,37 @@
             showToast(`🏅 ${type.toUpperCase()} badge selected! Send payment to claim.`);
         }
 
-        // ===== STATS ANIMATION =====
+        // ===== STATS =====
+        async function loadStats() {
+            try {
+                // Fetch leaderboard and calculate stats
+                const res = await fetch(`${CONFIG.apiBase}/leaderboard`);
+                const data = await res.json();
+                
+                if (data.ok && data.leaderboard) {
+                    const users = data.leaderboard;
+                    const totalUsers = users.length;
+                    
+                    // Calculate average IQ
+                    let totalIQ = 0;
+                    users.forEach(u => totalIQ += u.iq || 0);
+                    const avgIQ = totalUsers > 0 ? (totalIQ / totalUsers).toFixed(1) : '—';
+                    
+                    // Update display
+                    document.getElementById('testsToday').textContent = totalUsers.toLocaleString();
+                    document.getElementById('avgIq').textContent = avgIQ;
+                }
+            } catch (e) {
+                console.log('Stats load error:', e);
+            }
+        }
+        
         function animateStats() {
-            setInterval(() => {
-                const testsEl = document.getElementById('testsToday');
-                const currentTests = parseInt(testsEl.textContent.replace(',', ''));
-                testsEl.textContent = (currentTests + Math.floor(Math.random() * 3)).toLocaleString();
-            }, 5000);
+            // Load real stats first
+            loadStats();
+            
+            // Refresh stats every 30 seconds
+            setInterval(loadStats, 30000);
         }
 
         // ===== SMOOTH SCROLL =====
@@ -2272,24 +2330,20 @@
             document.getElementById('testSection').scrollIntoView({ behavior: 'smooth' });
         }
 
-        // ===== LINK POPUP (140+ or paid) =====
+        // ===== LINK POPUP (140+ IQ only) =====
         function showLinkPopup(iq) {
+            // Only show for 140+ IQ
+            if (iq < 140) return;
+            
             const overlay = document.getElementById('linkPopupOverlay');
             const title = document.getElementById('linkPopupTitle');
             const body = document.getElementById('linkPopupBody');
             const inputSection = document.getElementById('linkInputSection');
             
-            if (iq >= 140) {
-                title.textContent = "🎉 You're not that big of a dumbass.";
-                title.style.color = 'var(--neon-green)';
-                body.textContent = "You unlocked link posting. Add your link to the leaderboard.";
-                inputSection.style.display = 'block';
-            } else {
-                title.textContent = "❌ Too dumb for links.";
-                title.style.color = 'var(--neon-red)';
-                body.textContent = "Score 140+ OR pay to boost your ranking to unlock link posting.";
-                inputSection.style.display = 'none';
-            }
+            title.textContent = "🧠 GENIUS UNLOCKED!";
+            title.style.color = 'var(--neon-green)';
+            body.innerHTML = `You scored <strong>${iq}</strong> — you've unlocked link posting!<br><span style="color: var(--text-muted); font-size: 0.9rem;">Add your link below (optional)</span>`;
+            inputSection.style.display = 'block';
             
             overlay.style.display = 'flex';
         }

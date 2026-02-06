@@ -1,137 +1,191 @@
 # WhosTheDumbass.com - Project Documentation
 
-**Last Updated:** 2026-02-06 01:30 GMT+7
-
-## Overview
-AI-powered IQ assessment with tamper-proof DNA2 tokens. Users paste their AI chat transcript, get analyzed by ChatGPT/Claude/Gemini, and receive a cryptographically signed score.
-
-## Live URLs
-- **Frontend:** https://warwideweb.github.io/whos-the-dumbass/
-- **Worker API:** https://whosthedumbass-api.warwideweb.workers.dev
-
-## Repositories
-- **Frontend:** https://github.com/warwideweb/whos-the-dumbass
-- **Worker:** https://github.com/warwideweb/whosthedumbass-worker
+**Last Updated:** 2026-02-06
+**Live Site:** https://whosthedumbass.com
+**Admin Panel:** https://whosthedumbass-api.warwideweb.workers.dev/admin
+**Frontend Repo:** https://github.com/warwideweb/whos-the-dumbass
+**Backend Repo:** https://github.com/warwideweb/whosthedumbass-worker
 
 ---
 
-## Architecture
+## 🎯 What It Is
 
-### Frontend Flow:
-1. User clicks "Copy the prompt"
-2. Frontend fetches nonce/timestamp from `/prompt`
-3. User pastes prompt + transcript to ChatGPT
-4. ChatGPT returns JSON with scores
-5. User pastes JSON + original transcript to site
-6. Frontend sends to `/verify`
-7. Worker validates, normalizes, signs, returns DNA2 token
-8. User sees IQ score + 140+ popup for link posting
-
-### Worker Endpoints:
-- `GET /prompt` - Returns nonce, timestamp, prompt text
-- `POST /verify` - Validates JSON, returns DNA2 token
-- `GET /leaderboard` - Returns top entries
-- `POST /payment/verify` - Verify Solana payments
+AI-powered IQ test using the IQ2 v2 protocol. Users copy a "Calibration Pack" prompt, paste it into any AI (ChatGPT, Grok, Gemini), get a scored response, and paste it back for verification.
 
 ---
 
-## Prompt Format (COPY PROMPT)
-```
-Analyze the TRANSCRIPT and output ONLY strict JSON. No markdown, no commentary, no extra text.
+## 🔧 IQ2 v2 Protocol
 
-NONCE: <32-hex-chars>
-TIMESTAMP: <unix-ms>
+### How It Works
+1. User clicks "Copy Prompt" → gets Calibration Pack with nonce, timestamp, 10 tasks
+2. User pastes into any AI → AI returns `IQ2RES2::<base64url>` response
+3. User pastes response back → backend verifies
+4. Backend grades tasks, validates checksums, computes IQ score
+5. User added to leaderboard
 
-Return JSON with EXACTLY these keys and no others:
-{
-  "v": 1,
-  "type": "iq2json",
-  "nonce": "<nonce>",
-  "timestamp": <timestamp>,
-  "profile": {
-    "logical_reasoning": <number 0-100>,
-    ... (28 total keys)
-  },
-  "context_messages": <integer >=0>,
-  "analysis_summary": "<1-3 sentences ASCII only, max 240 chars>"
-}
+### Task Bank (300+)
+- **Logic tasks** (100): Syllogisms, conditionals, deduction
+- **Number series** (100): Pattern recognition
+- **Verbal analogy** (100): Word relationships
+- **Attention tasks** (20): "Select C" type checks
+- **Decomposition** (20): Ordering tasks
 
-STRICT RULES:
-- Output JSON only.
-- Scores must be JSON numbers, not strings.
-- If transcript is missing/empty, output ONLY: {"error":"missing transcript"}.
+### Checksums (Anti-Tamper)
+- **c1**: Sum of 28 profile scores mod 97
+- **c2**: Sum of answer codes + memory token ASCII mod 97
+- **c3**: Sum of last decimal digits mod 10
 
-TRANSCRIPT:
-PASTE FULL TRANSCRIPT HERE
-```
+### Scoring Formula
+- 60% Objective score (graded tasks)
+- 40% Profile average (AI self-assessment)
+- Mapped to IQ scale 70-160
 
 ---
 
-## /verify Request
-```json
-{
-  "nonce": "<32-hex-nonce>",
-  "timestamp": <unix-ms>,
-  "model_json": "<pasted JSON from AI>",
-  "transcript_text": "<original transcript>",
-  "username": "<username>"
-}
+## 💰 Payment Tiers
+
+| Amount | Badge | Position |
+|--------|-------|----------|
+| $10+ | 💸 Poor and Dumb | Bottom of paid section |
+| $50+ | 🌍 First World Poor | Mid-tier |
+| $100+ | 🐋 Certified Dumbass Whale | High position |
+| $1000+ | 👑 IQ Slave Owner | **TOP OF LEADERBOARD** |
+
+### Features
+- Paid users sorted by amount (highest first)
+- Top payer gets glowing name, highlighted row
+- All paid users can add URL to leaderboard
+- IQ 140+ can add URL without paying
+
+---
+
+## 📁 File Structure
+
+### Frontend (GitHub Pages)
+```
+/projects/whos-the-dumbass/
+├── index.html          # Main site
+├── PROJECT.md          # This file
+└── CNAME               # whosthedumbass.com
 ```
 
-## /verify Response
-```json
-{
-  "ok": true,
-  "dna2": "DNA2::<base64url>",
-  "iq_score": 95,
-  "transcript_hash": "<sha256>",
-  "profile": {...},
-  "userId": "user:..."
-}
+### Backend (Cloudflare Worker)
+```
+/projects/whosthedumbass/
+├── worker.js           # Main worker (IQ2 v2)
+├── worker-v1-backup.js # v1 backup
+├── wrangler.toml       # Cloudflare config
+└── .wrangler/          # Build artifacts
 ```
 
 ---
 
-## Anti-Bullshit Rules (Server-Side)
-1. **Short transcript cap:** If `transcript_text < 800 chars` OR `context_messages < 10`, cap all scores at 75
-2. **Implausible profile:** If `> 6 categories > 90`, reject with "implausible_profile"
-3. **Missing transcript:** Reject if empty/missing
-4. **Score normalization:** Accept numbers OR strings, clamp to 0-100, normalize to 4 decimals
-5. **Check digit:** D = `floor(timestamp/120000) % 10`, adjust fractions so digit sum mod 10 == D
-6. **Fraction diversity:** Max 10 same 4-digit fractions
+## 🔌 API Endpoints
 
-## Nonce Rules
-- 32 hex characters (16 bytes)
-- TTL: 120 seconds
-- Single-use (KV enforced)
+### Public
+- `GET /prompt` - Get Calibration Pack with nonce
+- `POST /verify` - Verify IQ2RES2 response, get score
+- `GET /leaderboard` - Get top 50 users
+- `POST /save-link` - Save profile URL (140+ IQ or paid)
+- `POST /boost` - Record payment, assign badge, save URL
 
----
-
-## UI Structure
-1. **Hero Section** - Title, IQ display, CTA button
-2. **Leaderboard** - Global rankings (moved above test)
-3. **Test Section** - 3-step flow (Copy, Paste, Verify)
-4. **Already Tested** - Shows after completion
-5. **Payment Section** - SOL boost payments
-
-## 140+ Link Posting
-- If IQ >= 140: Popup with "You're not that big of a dumbass." + link input
-- If IQ < 140: Popup with "Nope." - didn't unlock
+### Admin (requires X-Admin-Key header)
+- `GET /admin` - Admin dashboard HTML
+- `GET /admin/stats` - Dashboard stats
+- `GET /admin/users` - List all users
+- `POST /admin/clear-v2` - Clear leaderboard
 
 ---
 
-## File Locations
-- **Worker:** `/projects/whosthedumbass/worker.js`
-- **Frontend:** `/projects/whos-the-dumbass/index.html`
-- **Memory:** `/memory/2026-02-06.md`
+## 🚨 Important Code Locations
 
-## Deployment
+### IP Limit (Currently DISABLED for testing)
+```javascript
+// In worker.js, search for:
+/* === IP LIMIT CODE (DISABLED FOR TESTING) ===
+```
+
+### Payment Badge Logic
+```javascript
+// In worker.js:
+function getPaymentBadge(boostAmount) { ... }
+```
+
+### Leaderboard Sorting
+```javascript
+// In worker.js:
+async function getLeaderboard(env) { ... }
+// Sorts: paid users by amount DESC, then IQ DESC
+```
+
+### 140+ IQ Popup
+```javascript
+// In index.html:
+function showLinkPopup(iq) { ... }
+function processResult(iq, ...) { ... }
+```
+
+---
+
+## 🔄 Recent Changes (2026-02-06)
+
+### Session 1: IQ2 v2 Protocol
+- Implemented task-based verification
+- 300+ task bank
+- Base64URL response format
+- Checksums c1, c2, c3
+- Admin dashboard at /admin
+
+### Session 2: Payment Tiers
+- Added $10/$50/$100/$1000+ tiers
+- Badge system with glow effects
+- Paid users sorted at top
+- URL input on payment
+
+### Session 3: UI Fixes
+- Tier info display in payment section
+- Stats (Tests Today, Avg IQ) now fetched from API
+- Verify success scrolls to top
+- 140+ IQ popup with optional URL
+- Skip button added to popup
+
+---
+
+## 🛠️ Deployment
+
+### Frontend
 ```bash
-# Worker
-cd /projects/whosthedumbass
-wrangler deploy
-
-# Frontend (GitHub Pages)
 cd /projects/whos-the-dumbass
-git push origin main
+git add -A && git commit -m "message" && git push
+# Auto-deploys to GitHub Pages
 ```
+
+### Backend
+```bash
+cd /projects/whosthedumbass
+git add -A && git commit -m "message" && git push
+npx wrangler deploy
+```
+
+### Set Admin Key (one time)
+```bash
+cd /projects/whosthedumbass
+npx wrangler secret put ADMIN_KEY
+# Enter your password when prompted
+```
+
+---
+
+## ⚠️ To Restore IP Limits
+
+1. Open `/projects/whosthedumbass/worker.js`
+2. Search for `=== IP LIMIT CODE (DISABLED`
+3. Remove the `/*` and `*/` comment markers
+4. Do the same for `=== IP MARK SUBMITTED CODE`
+5. Deploy: `npx wrangler deploy`
+
+---
+
+## 📞 Support
+
+If context is lost, read this file first. All key decisions and code locations are documented above.
