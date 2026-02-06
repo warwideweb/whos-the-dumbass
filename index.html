@@ -1298,8 +1298,8 @@
                         <ol style="color: var(--text-secondary); font-size: 0.95rem; padding-left: 24px; line-height: 1.8;">
                             <li>Open ChatGPT, Grok, Gemini, or any AI</li>
                             <li>Paste the Calibration Pack</li>
-                            <li>Copy the <strong style="color: var(--neon-purple);">IQ2RAW2::...</strong> or <strong style="color: var(--neon-purple);">IQ2RES2::...</strong> response</li>
-                            <li>Paste it below</li>
+                            <li>Answer the AI's follow-up questions <strong style="color: var(--neon-yellow);">(this is where your real score comes from!)</strong></li>
+                            <li>When you see <strong style="color: var(--neon-purple);">IQ2RAW2::...</strong>, copy the <strong style="color: var(--neon-green);">ENTIRE conversation</strong> and paste it below</li>
                         </ol>
                     </div>
                     
@@ -1308,7 +1308,7 @@
                         <textarea 
                             class="response-input" 
                             id="responseInput" 
-                            placeholder="Paste the IQ2RAW2::... or IQ2RES2::... response here"
+                            placeholder="Paste the ENTIRE conversation here (including your answers to the AI's questions)"
                             oninput="handleResponseInput()"
                             style="min-height: 100px;"
                         ></textarea>
@@ -1489,7 +1489,7 @@
             turnstileSiteKey: 'YOUR_TURNSTILE_SITE_KEY',
             solPrice: 150, // USD per SOL (update as needed)
             boostRate: 1, // positions per $10 USD
-            timerDuration: 120, // 2 minutes (nonce expiry)
+            timerDuration: 600, // 10 minutes (nonce expiry)
         };
         
         // ===== STATE =====
@@ -1593,7 +1593,7 @@
                 await navigator.clipboard.writeText(data.prompt);
                 
                 step1Text.textContent = '✓ Copied!';
-                showToast('✅ Copied! Now paste into ChatGPT with your conversation.');
+                showToast('✅ Copied! Paste into any AI, answer its questions, then copy the ENTIRE chat back here.');
                 
                 // Show step 2
                 document.getElementById('step2Section').style.display = 'block';
@@ -1617,11 +1617,11 @@
             const response = (document.getElementById('responseInput').value || '').trim();
             const username = (document.getElementById('usernameInput').value || '').trim();
             
-            // v2 + v2.1: Look for IQ2RES2:: or IQ2RAW2:: token
+            // v2.2: Look for IQ2RES2:: or IQ2RAW2:: token, or substantial text (800+ chars)
             const hasIQ2 = response.includes('IQ2RES2::') || response.includes('IQ2RAW2::');
-            // Mode B fallback: plain text > 400 chars
-            const hasTextFallback = response.length >= 400;
-            const hasContent = hasIQ2 || hasTextFallback;
+            // Mode B fallback: substantial text > 800 chars for AI analysis
+            const hasSubstantialText = response.length >= 800;
+            const hasContent = hasIQ2 || hasSubstantialText;
             
             // Enable button if we have valid content
             document.getElementById('submitBtn').disabled = !(hasContent && username.length >= 2 && currentNonce);
