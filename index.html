@@ -1387,13 +1387,14 @@
 
         // ===== INITIALIZATION =====
         async function init() {
-            // Check if already tested
+            /* === ALREADY TESTED CHECK (DISABLED FOR TESTING) ===
             const existingScore = localStorage.getItem('wtd_iq_score');
             const existingUsername = localStorage.getItem('wtd_username');
             
             if (existingScore) {
                 showAlreadyTested(existingScore, existingUsername);
             }
+            === END ALREADY TESTED CHECK === */
             // No auto-fetch needed - user clicks COPY CHALLENGE
 
             // Load leaderboard
