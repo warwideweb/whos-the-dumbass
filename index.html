@@ -1588,8 +1588,8 @@
             step1Text.textContent = '...';
             
             try {
-                // Get prompt from server
-                const res = await fetch(`${CONFIG.apiBase}/prompt`);
+                // Get prompt from server (v2.1 format)
+                const res = await fetch(`${CONFIG.apiBase}/prompt?v=21`);
                 const data = await res.json();
                 
                 if (!data.ok) throw new Error(data.error || 'Failed');
