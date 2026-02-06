@@ -11,8 +11,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-    <!-- Cloudflare Turnstile -->
-    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+    <!-- Turnstile removed - using nonce-based protection -->
     <style>
         * {
             margin: 0;
@@ -1214,11 +1213,11 @@
                 <div class="header-stats">
                     <div class="stat">
                         <span>Tests Today:</span>
-                        <span class="stat-value" id="testsToday">2,847</span>
+                        <span class="stat-value" id="testsToday">—</span>
                     </div>
                     <div class="stat">
                         <span>Avg IQ:</span>
-                        <span class="stat-value" id="avgIq">97.3</span>
+                        <span class="stat-value" id="avgIq">—</span>
                     </div>
                 </div>
             </div>
@@ -1331,6 +1330,7 @@
                         id="usernameInput" 
                         placeholder="Your username"
                         maxlength="20"
+                        oninput="validateSubmitButton()"
                     >
                 </div>
 
@@ -1447,7 +1447,7 @@
 
     <footer>
         <div class="container">
-            <p class="footer-text">© 2025 WhosTheDumbass.com — Measuring stupidity since always</p>
+            <p class="footer-text">© 2026 WhosTheDumbass.com — Measuring stupidity since always</p>
             <div class="footer-links">
                 <a href="#">Twitter/X</a>
                 <a href="#">Discord</a>
@@ -1492,18 +1492,9 @@
             timerDuration: 120, // 2 minutes (nonce expiry)
         };
         
-        // Turnstile state
-        let turnstileToken = null;
-        
-        function onTurnstileSuccess(token) {
-            turnstileToken = token;
-            document.getElementById('turnstileStatus').textContent = '✅ Verified human!';
-            document.getElementById('turnstileStatus').style.color = 'var(--neon-green)';
-            validateSubmitButton();
-        }
-
         // ===== STATE =====
         let timerInterval = null;
+        let currentPrompt = null;
         let timeRemaining = CONFIG.timerDuration;
         let testStarted = false;
         let hasSubmitted = false;
@@ -1623,14 +1614,17 @@
         }
 
         function handleResponseInput() {
-            const response = document.getElementById('responseInput').value;
-            // v2 + v2.1: Look for IQ2RES2:: or IQ2RAW2:: token
-            const hasIQ2 = response.includes('IQ2RES2::') || response.includes('IQ2RAW2::') || response.includes('"iq2res2"') || response.includes('"iq2raw2"');
-            const username = document.getElementById('usernameInput').value.trim();
-            const hasNonWhitespace = response.trim().length > 0;
+            const response = (document.getElementById('responseInput').value || '').trim();
+            const username = (document.getElementById('usernameInput').value || '').trim();
             
-            // Enable button if we have valid content (v2.1 tolerance)
-            document.getElementById('submitBtn').disabled = !(hasIQ2 && username.length >= 2 && currentNonce);
+            // v2 + v2.1: Look for IQ2RES2:: or IQ2RAW2:: token
+            const hasIQ2 = response.includes('IQ2RES2::') || response.includes('IQ2RAW2::');
+            // Mode B fallback: plain text > 400 chars
+            const hasTextFallback = response.length >= 400;
+            const hasContent = hasIQ2 || hasTextFallback;
+            
+            // Enable button if we have valid content
+            document.getElementById('submitBtn').disabled = !(hasContent && username.length >= 2 && currentNonce);
             
             if (hasIQ2) {
                 document.getElementById('step2').classList.add('completed');
@@ -1641,6 +1635,11 @@
         
         // Validate and toggle button (called on paste/input)
         function validateAndToggleButton() {
+            handleResponseInput();
+        }
+        
+        // Alias for validateAndToggleButton
+        function validateSubmitButton() {
             handleResponseInput();
         }
         
@@ -1664,8 +1663,6 @@
                 responseInput.addEventListener('input', validateAndToggleButton);
                 responseInput.addEventListener('change', validateAndToggleButton);
                 responseInput.addEventListener('keyup', validateAndToggleButton);
-                    setTimeout(handleResponseInput, 0);
-                });
             }
         }
 
@@ -1705,17 +1702,7 @@
             currentNonce = null;
         }
 
-        // ===== RESPONSE HANDLING =====
-        function validateSubmitButton() {
-            const username = document.getElementById('usernameInput').value.trim();
-            const hasUsername = username.length >= 2;
-            const response = document.getElementById('responseInput')?.value || '';
-            // v2 + v2.1 token check
-            const hasResponse = response.includes('IQ2RES2::') || response.includes('IQ2RAW2::') || response.includes('"iq2res2"') || response.includes('"iq2raw2"');
-            const hasNonce = !!currentNonce;
-            
-            document.getElementById('submitBtn').disabled = !(hasResponse && hasUsername && hasNonce);
-        }
+        // ===== RESPONSE HANDLING ===== (validateSubmitButton moved above)
 
         async function submitTest() {
             if (hasSubmitted) return;
@@ -1760,13 +1747,15 @@
             try {
                 showToast('🔐 Verifying response...');
                 
-                // Send response to /verify (v2 sends full response, backend extracts token)
+                // Send response to /verify (v2.1 sends response + nonce + timestamp)
                 const res = await fetch(`${CONFIG.apiBase}/verify`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
                         response: response,
-                        username: username
+                        username: username,
+                        nonce: currentNonce,
+                        timestamp: currentTimestamp
                     })
                 });
                 
@@ -1788,6 +1777,11 @@
                     // User-friendly error messages (v2 + v2.1)
                     const errorMap = {
                         'no_token_found': '❌ Could not find IQ2RES2:: or IQ2RAW2:: token. Copy the full response.',
+                        'no_raw_token': '❌ Could not find IQ2RAW2:: or IQ2RES2:: in the response. Copy the full AI output.',
+                        'json_parse_failed': '❌ Could not parse the AI response. Make sure you copied the full output.',
+                        'answer_key_missing': '❌ Missing answers in the AI response.',
+                        'token_mismatch': '❌ Memory token mismatch. The AI didn\'t echo the token correctly.',
+                        'mode_b_scoring': 'ℹ️ Scored using text-only estimate (no IQ2RAW2 token found).',
                         'invalid_base64': '❌ Invalid response format. Copy exactly as shown.',
                         'invalid_json': '❌ Invalid JSON in response',
                         'invalid_version': '❌ Wrong version. Make sure you used the current prompt.',
@@ -2141,29 +2135,7 @@
         }
 
         function addToLeaderboard(username, iq) {
-            // Add to mock data (in real app, this would be an API call)
-            const newUser = {
-                rank: MOCK_LEADERBOARD.length + 1,
-                username: '@' + username,
-                iq: iq,
-                links: null,
-                boost: 0,
-                badges: []
-            };
-            
-            MOCK_LEADERBOARD.push(newUser);
-            
-            // Re-sort by IQ (and boost)
-            MOCK_LEADERBOARD.sort((a, b) => {
-                const aScore = a.iq + (a.boost / 100);
-                const bScore = b.iq + (b.boost / 100);
-                return bScore - aScore;
-            });
-            
-            // Update ranks
-            MOCK_LEADERBOARD.forEach((user, idx) => user.rank = idx + 1);
-            
-            // Reload display
+            // Real leaderboard is loaded from API
             loadLeaderboard();
         }
 
