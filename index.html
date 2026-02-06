@@ -1296,9 +1296,9 @@
                     <div style="background: rgba(0, 255, 136, 0.05); border: 1px solid rgba(0, 255, 136, 0.2); border-radius: 16px; padding: 24px; margin-bottom: 32px; max-width: 500px; margin-left: auto; margin-right: auto;">
                         <p style="color: var(--neon-green); font-weight: 600; margin-bottom: 16px; font-size: 1.05rem;">✅ Prompt copied!</p>
                         <ol style="color: var(--text-secondary); font-size: 0.95rem; padding-left: 24px; line-height: 1.8;">
-                            <li>Open any AI you use (ChatGPT, Grok, Gemini, Claude)</li>
-                            <li>Paste the calibration code into the chat</li>
-                            <li>Copy the <strong style="color: var(--neon-purple);">IQ2ENC::...</strong> response the AI gives you</li>
+                            <li>Open any AI (ChatGPT, Grok, Gemini, Claude)</li>
+                            <li>Paste the prompt into the chat</li>
+                            <li>Copy the <strong style="color: var(--neon-purple);">WTD::...</strong> line it gives you</li>
                             <li>Paste it below and hit Verify</li>
                         </ol>
                     </div>
@@ -1308,7 +1308,7 @@
                         <textarea 
                             class="response-input" 
                             id="responseInput" 
-                            placeholder="Paste the IQ2ENC::... response from your AI here"
+                            placeholder="Paste the AI response here (the WTD::... line)"
                             oninput="handleResponseInput()"
                             style="min-height: 100px;"
                         ></textarea>
@@ -1617,8 +1617,8 @@
             const response = (document.getElementById('responseInput').value || '').trim();
             const username = (document.getElementById('usernameInput').value || '').trim();
             
-            // v3.0: Check for IQ2ENC:: (new format) or legacy IQ2RAW2::/IQ2RES2::
-            const hasToken = response.includes('IQ2ENC::') || response.includes('IQ2RAW2::') || response.includes('IQ2RES2::');
+            // v3.1: Check for WTD:: (new) or legacy IQ2ENC::/IQ2RAW2::/IQ2RES2::
+            const hasToken = response.includes('WTD::') || response.includes('IQ2ENC::') || response.includes('IQ2RAW2::') || response.includes('IQ2RES2::');
             
             // Enable button if we have a valid token
             document.getElementById('submitBtn').disabled = !(hasToken && username.length >= 2 && currentNonce);
@@ -1711,11 +1711,11 @@
             
             let response = document.getElementById('responseInput').value.trim();
             
-            // v3.0: Check for IQ2ENC:: (new format) or legacy IQ2RAW2::/IQ2RES2::
-            const hasToken = response.includes('IQ2ENC::') || response.includes('IQ2RAW2::') || response.includes('IQ2RES2::');
+            // v3.1: Check for WTD:: (new) or legacy formats
+            const hasToken = response.includes('WTD::') || response.includes('IQ2ENC::') || response.includes('IQ2RAW2::') || response.includes('IQ2RES2::');
             
             if (!hasToken) {
-                showToast('❌ Paste the IQ2ENC:: response from your AI');
+                showToast('❌ Paste the response from your AI');
                 return;
             }
             
@@ -1759,16 +1759,17 @@
                     let errMsg = data.error || 'Verification failed';
                     const detail = data.detail ? `: ${data.detail}` : '';
                     
-                    // User-friendly error messages (v3.0)
+                    // User-friendly error messages (v3.1)
                     const errorMap = {
-                        'no_enc_token': '❌ Could not find IQ2ENC:: in the response. Copy the AI\'s full output.',
-                        'legacy_format': '⚠️ You used an old prompt. Click Copy Prompt to get a new one.',
-                        'invalid_scores': '❌ Invalid score data. Make sure you copied the complete response.',
-                        'invalid_score_range': '❌ Scores out of range. Don\'t modify the AI output.',
-                        'checksum_failed': '❌ Integrity check failed. Don\'t edit the AI\'s response — copy it exactly.',
-                        'suspicious_scores': '❌ Scores appear manipulated. Try again honestly.',
-                        'invalid_nonce': '⏱️ Prompt expired. Click Copy Prompt again.',
-                        'nonce_already_used': '🔒 Already verified. One attempt only!',
+                        'no_token': '❌ Could not find the AI response. Copy the full output.',
+                        'no_enc_token': '❌ Could not find the AI response. Copy the full output.',
+                        'legacy_format': '❌ Old format. Click Copy Prompt for a new one.',
+                        'invalid_scores': '❌ Invalid data. Copy the complete response.',
+                        'invalid_score_range': '❌ Scores out of range. Don\'t modify the output.',
+                        'checksum_failed': '❌ Integrity check failed. Copy the response exactly as-is.',
+                        'suspicious_scores': '❌ Scores look manipulated. Try again honestly.',
+                        'invalid_nonce': '⏱️ Session expired. Click Copy Prompt again.',
+                        'nonce_already_used': '🔒 Already used. One attempt per prompt.',
                         'nonce_expired': '⏱️ Time ran out. Click Copy Prompt again.',
                         'missing_response': '❌ No response provided',
                     };
