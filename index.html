@@ -727,6 +727,70 @@
             font-size: 0.9rem;
         }
 
+        /* Payment Badges */
+        .payment-badge {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            margin-left: 8px;
+            display: inline-block;
+        }
+
+        .payment-badge.poor_dumb {
+            background: linear-gradient(135deg, #3a3a4a, #2a2a3a);
+            color: #888;
+            border: 1px solid #4a4a5a;
+        }
+
+        .payment-badge.first_world {
+            background: linear-gradient(135deg, #1e3a5f, #2a5298);
+            color: #7eb8ff;
+        }
+
+        .payment-badge.whale {
+            background: linear-gradient(135deg, #4a0080, #8b5cf6);
+            color: #fff;
+        }
+
+        .payment-badge.slave_owner {
+            background: linear-gradient(135deg, #ffd700, #ff8c00);
+            color: #000;
+            animation: badge-pulse 1.5s infinite;
+        }
+
+        .badge-glow {
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.7);
+        }
+
+        @keyframes badge-pulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 15px rgba(255, 215, 0, 0.7); }
+            50% { transform: scale(1.05); box-shadow: 0 0 25px rgba(255, 215, 0, 0.9); }
+        }
+
+        /* Top Payer Row */
+        .leaderboard-row.top-payer {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 140, 0, 0.1));
+            border: 2px solid var(--neon-yellow);
+            animation: top-payer-glow 2s infinite;
+        }
+
+        @keyframes top-payer-glow {
+            0%, 100% { box-shadow: 0 0 10px rgba(255, 215, 0, 0.3); }
+            50% { box-shadow: 0 0 25px rgba(255, 215, 0, 0.6); }
+        }
+
+        .glow-name {
+            color: var(--neon-yellow) !important;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+            animation: name-glow 1.5s infinite;
+        }
+
+        @keyframes name-glow {
+            0%, 100% { text-shadow: 0 0 10px rgba(255, 215, 0, 0.6); }
+            50% { text-shadow: 0 0 20px rgba(255, 215, 0, 1), 0 0 30px rgba(255, 215, 0, 0.8); }
+        }
+
         /* Payment Section */
         .payment-section {
             background: var(--bg-secondary);
@@ -1273,6 +1337,16 @@
                             <div class="boost-preview">
                                 <div class="boost-preview-label">Ranking Boost</div>
                                 <div class="boost-preview-value" id="solBoost">+0 positions</div>
+                            </div>
+                            
+                            <div class="tier-preview" id="tierPreview" style="margin: 15px 0; padding: 12px; background: var(--bg-card); border-radius: 8px; text-align: center;">
+                                <div style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 5px;">You'll get:</div>
+                                <div id="tierBadgePreview" style="font-size: 1rem;">💸 Poor and Dumb ($10+)</div>
+                            </div>
+                            
+                            <div style="margin: 15px 0;">
+                                <label style="display: block; color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 8px;">🔗 Your URL (optional - shows on leaderboard):</label>
+                                <input type="text" id="boostUrlInput" placeholder="twitter.com/yourhandle or any URL" style="width: 100%; padding: 12px; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 8px; color: #fff; font-size: 0.9rem;">
                             </div>
                             
                             <button id="payBtn" onclick="sendPayment()" style="width: 100%; padding: 12px; background: var(--neon-green); color: #000; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 1rem; margin-top: 10px;">
@@ -1911,9 +1985,16 @@
             const row = document.createElement('div');
             row.className = 'leaderboard-row';
             
-            // Rank
+            // Check if top payer (IQ Slave Owner)
+            const isTopPayer = user.isTopPayer || (index === 0 && user.boost >= 1000);
+            if (isTopPayer) {
+                row.classList.add('top-payer');
+            }
+            
+            // Rank - top payer gets crown
             let rankContent = '';
-            if (index === 0) rankContent = '<span class="rank-medal">🥇</span>';
+            if (isTopPayer) rankContent = '<span class="rank-medal">👑</span>';
+            else if (index === 0) rankContent = '<span class="rank-medal">🥇</span>';
             else if (index === 1) rankContent = '<span class="rank-medal">🥈</span>';
             else if (index === 2) rankContent = '<span class="rank-medal">🥉</span>';
             else rankContent = `<span class="rank">#${user.rank}</span>`;
@@ -1923,11 +2004,20 @@
             if (user.iq >= 130) iqClass = 'high';
             else if (user.iq >= 100) iqClass = 'medium';
             
-            // Badges
+            // Payment badge
+            let paymentBadgeHtml = '';
+            if (user.paymentBadge) {
+                const glowClass = user.paymentBadge.glow ? 'badge-glow' : '';
+                paymentBadgeHtml = `<span class="payment-badge ${user.paymentBadge.tier} ${glowClass}">${user.paymentBadge.label}</span>`;
+            }
+            
+            // Regular badges
             let badgesHtml = '';
-            user.badges.forEach(badge => {
-                badgesHtml += `<span class="badge ${badge}">${badge.toUpperCase()}</span>`;
-            });
+            if (user.badges) {
+                user.badges.forEach(badge => {
+                    badgesHtml += `<span class="badge ${badge}">${badge.toUpperCase()}</span>`;
+                });
+            }
             
             // Links - show for 140+ IQ OR paid boosters
             let linksHtml = '';
@@ -1942,13 +2032,19 @@
                 linksHtml = `<span style="color: var(--text-muted)">—</span>`;
             }
             
-            // Boost
-            let boostHtml = user.boost > 0 ? `+$${user.boost}` : '—';
+            // Boost display
+            let boostHtml = '—';
+            if (user.boost >= 1000) boostHtml = `<span style="color: var(--neon-green); font-weight: 700;">$${user.boost}</span>`;
+            else if (user.boost > 0) boostHtml = `+$${user.boost}`;
+            
+            // Username with glow for top payer
+            const usernameClass = isTopPayer ? 'username glow-name' : 'username';
             
             row.innerHTML = `
                 <div>${rankContent}</div>
                 <div class="user-info">
-                    <span class="username">${user.username}</span>
+                    <span class="${usernameClass}">${user.username}</span>
+                    ${paymentBadgeHtml}
                     ${badgesHtml}
                 </div>
                 <div class="iq-score ${iqClass}">${user.iq}</div>
@@ -2080,35 +2176,41 @@
                 // Wait for confirmation
                 await connection.confirmTransaction(signature);
 
-                // Verify with our backend
-                const verifyRes = await fetch(`${CONFIG.apiBase}/payment/verify`, {
+                // Get the URL from the input
+                const boostUrl = document.getElementById('boostUrlInput')?.value?.trim() || '';
+                
+                // Calculate USD value
+                const usdValue = Math.round(amount * CONFIG.solPrice);
+                
+                // Register boost with our backend
+                const boostRes = await fetch(`${CONFIG.apiBase}/boost`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ signature, userId, expectedAmount: amount })
+                    body: JSON.stringify({ 
+                        userId, 
+                        amount: usdValue,
+                        link: boostUrl || undefined,
+                        txSignature: signature
+                    })
                 });
 
-                const verifyData = await verifyRes.json();
+                const boostData = await boostRes.json();
 
-                if (verifyData.ok) {
-                    showToast(`✅ Payment verified! +${verifyData.boost} boost! New rank: #${verifyData.newRank}`);
-                    loadLeaderboard(); // Refresh
-                    
-                    // Show link popup - they can now add links since they paid!
-                    const iq = parseInt(localStorage.getItem('wtd_iq_score') || '0');
-                    if (iq < 140) {
-                        // Only show if they didn't already qualify by IQ
-                        const overlay = document.getElementById('linkPopupOverlay');
-                        const title = document.getElementById('linkPopupTitle');
-                        const body = document.getElementById('linkPopupBody');
-                        const inputSection = document.getElementById('linkInputSection');
-                        title.textContent = "💰 Money talks!";
-                        title.style.color = 'var(--neon-purple)';
-                        body.textContent = "You paid to boost. Now you can add your link to the leaderboard!";
-                        inputSection.style.display = 'block';
-                        overlay.style.display = 'flex';
+                if (boostData.ok) {
+                    // Show success with badge info
+                    let msg = `✅ Payment verified! $${usdValue} boost!`;
+                    if (boostData.badge) {
+                        msg += ` ${boostData.badge.label}`;
                     }
+                    showToast(msg);
+                    
+                    if (boostData.message) {
+                        setTimeout(() => showToast(boostData.message), 2000);
+                    }
+                    
+                    loadLeaderboard(); // Refresh
                 } else {
-                    showToast('⚠️ Payment sent but verification pending. Contact support with tx: ' + signature.substring(0, 20) + '...');
+                    showToast('⚠️ Payment sent but boost pending. Contact support with tx: ' + signature.substring(0, 20) + '...');
                 }
 
             } catch (e) {
@@ -2132,6 +2234,22 @@
             
             const positions = Math.floor(usdValue / 10) * CONFIG.boostRate;
             document.getElementById(type + 'Boost').textContent = `+${positions} positions`;
+            
+            // Update tier badge preview
+            const tierPreview = document.getElementById('tierBadgePreview');
+            if (tierPreview) {
+                if (usdValue >= 1000) {
+                    tierPreview.innerHTML = '👑 <strong style="color: var(--neon-yellow);">IQ Slave Owner</strong> - TOP OF THE BOARD!';
+                } else if (usdValue >= 100) {
+                    tierPreview.innerHTML = '🐋 <strong style="color: var(--neon-purple);">Certified Dumbass Whale</strong>';
+                } else if (usdValue >= 50) {
+                    tierPreview.innerHTML = '🌍 <strong style="color: var(--neon-blue);">First World Poor</strong>';
+                } else if (usdValue >= 10) {
+                    tierPreview.innerHTML = '💸 Poor and Dumb ($10+)';
+                } else {
+                    tierPreview.innerHTML = '<span style="color: var(--neon-red);">Minimum $10 to boost</span>';
+                }
+            }
         }
 
         // ===== BADGE PURCHASE =====
