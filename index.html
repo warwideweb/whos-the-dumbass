@@ -1235,20 +1235,19 @@
                     <div style="background: rgba(0, 255, 136, 0.05); border: 1px solid rgba(0, 255, 136, 0.2); border-radius: 16px; padding: 24px; margin-bottom: 32px; max-width: 500px; margin-left: auto; margin-right: auto;">
                         <p style="color: var(--neon-green); font-weight: 600; margin-bottom: 16px; font-size: 1.05rem;">✅ Prompt copied!</p>
                         <ol style="color: var(--text-secondary); font-size: 0.95rem; padding-left: 24px; line-height: 1.8;">
-                            <li>Open ChatGPT, Claude, or Gemini</li>
                             <li>Open ChatGPT, Grok, Gemini, or any AI</li>
                             <li>Paste the Calibration Pack</li>
-                            <li>Copy the <strong style="color: var(--neon-purple);">IQ2RES2::...</strong> response</li>
+                            <li>Copy the <strong style="color: var(--neon-purple);">IQ2RAW2::...</strong> or <strong style="color: var(--neon-purple);">IQ2RES2::...</strong> response</li>
                             <li>Paste it below</li>
                         </ol>
                     </div>
                     
                     <div class="response-section" style="max-width: 500px; margin: 0 auto 24px;">
-                        <label style="display: block; color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 8px;">Paste the IQ2RES2:: response:</label>
+                        <label style="display: block; color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 8px;">Paste the AI response:</label>
                         <textarea 
                             class="response-input" 
                             id="responseInput" 
-                            placeholder="Paste the IQ2RES2::... response from ChatGPT here"
+                            placeholder="Paste the IQ2RAW2::... or IQ2RES2::... response here"
                             oninput="handleResponseInput()"
                             style="min-height: 100px;"
                         ></textarea>
@@ -1593,10 +1592,12 @@
 
         function handleResponseInput() {
             const response = document.getElementById('responseInput').value;
-            // v2: Look for IQ2RES2:: token
-            const hasIQ2 = response.includes('IQ2RES2::') || response.includes('"iq2res2"') || response.includes('"iq2json"');
+            // v2 + v2.1: Look for IQ2RES2:: or IQ2RAW2:: token
+            const hasIQ2 = response.includes('IQ2RES2::') || response.includes('IQ2RAW2::') || response.includes('"iq2res2"') || response.includes('"iq2raw2"');
             const username = document.getElementById('usernameInput').value.trim();
+            const hasNonWhitespace = response.trim().length > 0;
             
+            // Enable button if we have valid content (v2.1 tolerance)
             document.getElementById('submitBtn').disabled = !(hasIQ2 && username.length >= 2 && currentNonce);
             
             if (hasIQ2) {
@@ -1606,17 +1607,31 @@
             }
         }
         
-        // Fix paste-to-enable: synthetic input event dispatch
+        // Validate and toggle button (called on paste/input)
+        function validateAndToggleButton() {
+            handleResponseInput();
+        }
+        
+        // Fix paste-to-enable: synthetic input event dispatch (v2.1 fix)
         function setupPasteHandlers() {
             const responseInput = document.getElementById('responseInput');
             if (responseInput) {
-                responseInput.addEventListener('paste', () => {
-                    // Schedule validation after paste completes
+                // Primary paste handler
+                responseInput.addEventListener('paste', (e) => {
+                    // Schedule validation after paste completes using multiple strategies
                     requestAnimationFrame(() => {
-                        handleResponseInput();
-                        // Also dispatch synthetic input event for frameworks
                         responseInput.dispatchEvent(new Event('input', { bubbles: true }));
+                        validateAndToggleButton();
                     });
+                    // Backup with setTimeout
+                    setTimeout(validateAndToggleButton, 0);
+                    setTimeout(validateAndToggleButton, 50);
+                });
+                
+                // Also listen to input, change, and keyup for belt-and-suspenders
+                responseInput.addEventListener('input', validateAndToggleButton);
+                responseInput.addEventListener('change', validateAndToggleButton);
+                responseInput.addEventListener('keyup', validateAndToggleButton);
                     setTimeout(handleResponseInput, 0);
                 });
             }
@@ -1663,7 +1678,8 @@
             const username = document.getElementById('usernameInput').value.trim();
             const hasUsername = username.length >= 2;
             const response = document.getElementById('responseInput')?.value || '';
-            const hasResponse = response.includes('"iq2json"') || response.includes('"type"');
+            // v2 + v2.1 token check
+            const hasResponse = response.includes('IQ2RES2::') || response.includes('IQ2RAW2::') || response.includes('"iq2res2"') || response.includes('"iq2raw2"');
             const hasNonce = !!currentNonce;
             
             document.getElementById('submitBtn').disabled = !(hasResponse && hasUsername && hasNonce);
@@ -1679,11 +1695,12 @@
             
             let response = document.getElementById('responseInput').value.trim();
             
-            // v2: Look for IQ2RES2:: token
+            // v2 + v2.1: Look for IQ2RES2:: or IQ2RAW2:: token
             const hasV2Token = response.includes('IQ2RES2::');
+            const hasV21Token = response.includes('IQ2RAW2::');
             
-            // Fallback: v1 JSON format
-            if (!hasV2Token) {
+            // Validate we have a token
+            if (!hasV2Token && !hasV21Token) {
                 // Try to extract JSON from the response (may have markdown code blocks)
                 let jsonStr = response;
                 const jsonMatch = response.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
@@ -1691,9 +1708,9 @@
                     jsonStr = jsonMatch[1];
                 }
                 
-                // Validate it looks like JSON
-                if (!jsonStr.includes('"iq2json"') && !jsonStr.includes('"type"')) {
-                    showToast('❌ Paste the IQ2RES2:: response from ChatGPT');
+                // Validate it looks like valid response
+                if (!jsonStr.includes('"iq2json"') && !jsonStr.includes('"iq2res2"') && !jsonStr.includes('"iq2raw2"')) {
+                    showToast('❌ Paste the IQ2RES2:: or IQ2RAW2:: response from ChatGPT');
                     return;
                 }
             }
@@ -1736,13 +1753,13 @@
                     let errMsg = data.error || 'Verification failed';
                     const detail = data.detail ? `: ${data.detail}` : '';
                     
-                    // User-friendly error messages (v2)
+                    // User-friendly error messages (v2 + v2.1)
                     const errorMap = {
-                        'no_token_found': '❌ Could not find IQ2RES2:: token. Copy the full response.',
+                        'no_token_found': '❌ Could not find IQ2RES2:: or IQ2RAW2:: token. Copy the full response.',
                         'invalid_base64': '❌ Invalid response format. Copy exactly as shown.',
                         'invalid_json': '❌ Invalid JSON in response',
                         'invalid_version': '❌ Wrong version. Make sure you used the current prompt.',
-                        'invalid_type': '❌ Wrong format (type must be iq2res2)',
+                        'invalid_type': '❌ Wrong format (type must be iq2res2 or iq2raw2)',
                         'nonce_mismatch': '❌ Nonce mismatch. Use the prompt from this page.',
                         'timestamp_mismatch': '❌ Timestamp mismatch. Use the prompt from this page.',
                         'timestamp_invalid': '❌ Timestamp doesn\'t match issued challenge.',
@@ -1750,7 +1767,9 @@
                         'invalid_profile_keys': '❌ Profile must have exactly 28 keys',
                         'missing_profile_key': '❌ Missing required profile key',
                         'invalid_profile_value': '❌ Profile values must be numbers 0-100',
-                        'missing_answers': '❌ Missing objective_answers',
+                        'missing_answers': '❌ Missing answers object',
+                        'missing_answer': '❌ Missing answer for a task',
+                        'invalid_answer': '❌ Invalid answer (must be A/B/C/D)',
                         'checksum_c1_fail': '❌ Checksum c1 failed. Response may be tampered.',
                         'checksum_c2_fail': '❌ Checksum c2 failed. Response may be tampered.',
                         'checksum_c3_fail': '❌ Checksum c3 failed. Response may be tampered.',
