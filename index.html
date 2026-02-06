@@ -1711,24 +1711,12 @@
             
             let response = document.getElementById('responseInput').value.trim();
             
-            // v2 + v2.1: Look for IQ2RES2:: or IQ2RAW2:: token
-            const hasV2Token = response.includes('IQ2RES2::');
-            const hasV21Token = response.includes('IQ2RAW2::');
+            // v3.0: Check for IQ2ENC:: (new format) or legacy IQ2RAW2::/IQ2RES2::
+            const hasToken = response.includes('IQ2ENC::') || response.includes('IQ2RAW2::') || response.includes('IQ2RES2::');
             
-            // Validate we have a token
-            if (!hasV2Token && !hasV21Token) {
-                // Try to extract JSON from the response (may have markdown code blocks)
-                let jsonStr = response;
-                const jsonMatch = response.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-                if (jsonMatch) {
-                    jsonStr = jsonMatch[1];
-                }
-                
-                // Validate it looks like valid response
-                if (!jsonStr.includes('"iq2json"') && !jsonStr.includes('"iq2res2"') && !jsonStr.includes('"iq2raw2"')) {
-                    showToast('❌ Paste the IQ2RES2:: or IQ2RAW2:: response from ChatGPT');
-                    return;
-                }
+            if (!hasToken) {
+                showToast('❌ Paste the IQ2ENC:: response from your AI');
+                return;
             }
             
             hasSubmitted = true;
