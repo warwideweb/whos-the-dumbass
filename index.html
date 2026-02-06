@@ -1172,33 +1172,26 @@
                         <p style="color: var(--neon-green); font-weight: 600; margin-bottom: 16px; font-size: 1.05rem;">✅ Prompt copied!</p>
                         <ol style="color: var(--text-secondary); font-size: 0.95rem; padding-left: 24px; line-height: 1.8;">
                             <li>Open ChatGPT, Claude, or Gemini</li>
-                            <li>Paste the prompt + your conversation</li>
-                            <li>Copy the <strong style="color: var(--neon-purple);">JSON response</strong></li>
+                            <li>Open ChatGPT, Grok, Gemini, or any AI</li>
+                            <li>Paste the Calibration Pack</li>
+                            <li>Copy the <strong style="color: var(--neon-purple);">IQ2RES2::...</strong> response</li>
                             <li>Paste it below</li>
                         </ol>
                     </div>
                     
                     <div class="response-section" style="max-width: 500px; margin: 0 auto 24px;">
-                        <label style="display: block; color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 8px;">1. Paste the JSON response:</label>
+                        <label style="display: block; color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 8px;">Paste the IQ2RES2:: response:</label>
                         <textarea 
                             class="response-input" 
                             id="responseInput" 
-                            placeholder="Paste the JSON response from ChatGPT here"
+                            placeholder="Paste the IQ2RES2::... response from ChatGPT here"
                             oninput="handleResponseInput()"
-                            style="min-height: 80px;"
+                            style="min-height: 100px;"
                         ></textarea>
                     </div>
                     
-                    <div class="response-section" style="max-width: 500px; margin: 0 auto 32px;">
-                        <label style="display: block; color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 8px;">2. Paste the same transcript you used:</label>
-                        <textarea 
-                            class="response-input" 
-                            id="transcriptInput" 
-                            placeholder="Paste the transcript you sent to ChatGPT"
-                            oninput="handleResponseInput()"
-                            style="min-height: 80px;"
-                        ></textarea>
-                    </div>
+                    <!-- Hidden transcript input for legacy/backup -->
+                    <input type="hidden" id="transcriptInput" value="v2-no-transcript-needed">
                 </div>
                 
                 <p style="text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 40px;">
@@ -1408,6 +1401,9 @@
 
             // Animate stats
             animateStats();
+            
+            // Setup paste handlers for instant button enable
+            setupPasteHandlers();
         }
 
         function showAlreadyTested(score, username) {
@@ -1492,17 +1488,32 @@
 
         function handleResponseInput() {
             const response = document.getElementById('responseInput').value;
-            const transcript = document.getElementById('transcriptInput').value.trim();
-            const hasIQ2 = response.includes('"iq2json"') || response.includes('"type"');
-            const hasTranscript = transcript.length > 0;
+            // v2: Look for IQ2RES2:: token
+            const hasIQ2 = response.includes('IQ2RES2::') || response.includes('"iq2res2"') || response.includes('"iq2json"');
             const username = document.getElementById('usernameInput').value.trim();
             
-            document.getElementById('submitBtn').disabled = !(hasIQ2 && hasTranscript && username.length >= 2 && currentNonce);
+            document.getElementById('submitBtn').disabled = !(hasIQ2 && username.length >= 2 && currentNonce);
             
-            if (hasIQ2 && hasTranscript) {
+            if (hasIQ2) {
                 document.getElementById('step2').classList.add('completed');
                 document.getElementById('step2').classList.remove('active');
                 document.getElementById('step3').classList.add('active');
+            }
+        }
+        
+        // Fix paste-to-enable: synthetic input event dispatch
+        function setupPasteHandlers() {
+            const responseInput = document.getElementById('responseInput');
+            if (responseInput) {
+                responseInput.addEventListener('paste', () => {
+                    // Schedule validation after paste completes
+                    requestAnimationFrame(() => {
+                        handleResponseInput();
+                        // Also dispatch synthetic input event for frameworks
+                        responseInput.dispatchEvent(new Event('input', { bubbles: true }));
+                    });
+                    setTimeout(handleResponseInput, 0);
+                });
             }
         }
 
@@ -1563,26 +1574,23 @@
             
             let response = document.getElementById('responseInput').value.trim();
             
-            // Try to extract JSON from the response (may have markdown code blocks)
-            let jsonStr = response;
-            // Remove markdown code blocks if present
-            const jsonMatch = response.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-            if (jsonMatch) {
-                jsonStr = jsonMatch[1];
-            }
+            // v2: Look for IQ2RES2:: token
+            const hasV2Token = response.includes('IQ2RES2::');
             
-            // Validate it looks like JSON
-            if (!jsonStr.includes('"iq2json"') && !jsonStr.includes('"type"')) {
-                showToast('❌ Paste the JSON response from ChatGPT');
-                return;
-            }
-            
-            // Try parsing to validate
-            try {
-                JSON.parse(jsonStr);
-            } catch (e) {
-                showToast('❌ Invalid JSON. Make sure you copied the full response.');
-                return;
+            // Fallback: v1 JSON format
+            if (!hasV2Token) {
+                // Try to extract JSON from the response (may have markdown code blocks)
+                let jsonStr = response;
+                const jsonMatch = response.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+                if (jsonMatch) {
+                    jsonStr = jsonMatch[1];
+                }
+                
+                // Validate it looks like JSON
+                if (!jsonStr.includes('"iq2json"') && !jsonStr.includes('"type"')) {
+                    showToast('❌ Paste the IQ2RES2:: response from ChatGPT');
+                    return;
+                }
             }
             
             hasSubmitted = true;
@@ -1598,15 +1606,12 @@
             try {
                 showToast('🔐 Verifying response...');
                 
-                // Send JSON to /verify with nonce and timestamp
+                // Send response to /verify (v2 sends full response, backend extracts token)
                 const res = await fetch(`${CONFIG.apiBase}/verify`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
-                        nonce: currentNonce,
-                        timestamp: currentTimestamp,
-                        model_json: jsonStr,
-                        transcript_text: document.getElementById('transcriptInput').value.trim(),
+                        response: response,
                         username: username
                     })
                 });
@@ -1626,28 +1631,29 @@
                     let errMsg = data.error || 'Verification failed';
                     const detail = data.detail ? `: ${data.detail}` : '';
                     
-                    // User-friendly error messages
+                    // User-friendly error messages (v2)
                     const errorMap = {
-                        'invalid_json': '❌ Invalid JSON',
-                        'invalid_v': '❌ Wrong format (v must be 1)',
-                        'invalid_type': '❌ Wrong format (type must be iq2json)',
-                        'nonce_mismatch': '❌ Nonce doesn\'t match. Use the prompt from this page.',
-                        'timestamp_mismatch': '❌ Timestamp doesn\'t match. Use the prompt from this page.',
+                        'no_token_found': '❌ Could not find IQ2RES2:: token. Copy the full response.',
+                        'invalid_base64': '❌ Invalid response format. Copy exactly as shown.',
+                        'invalid_json': '❌ Invalid JSON in response',
+                        'invalid_version': '❌ Wrong version. Make sure you used the current prompt.',
+                        'invalid_type': '❌ Wrong format (type must be iq2res2)',
+                        'nonce_mismatch': '❌ Nonce mismatch. Use the prompt from this page.',
+                        'timestamp_mismatch': '❌ Timestamp mismatch. Use the prompt from this page.',
+                        'timestamp_invalid': '❌ Timestamp doesn\'t match issued challenge.',
                         'missing_profile': '❌ Missing profile data',
-                        'invalid_profile_keys': '❌ Missing required keys',
-                        'missing_profile_keys': '❌ Missing profile keys',
-                        'invalid_score_type': '❌ Scores must be numbers',
-                        'invalid_score_range': '❌ Scores must be 0-100',
-                        'invalid_context_messages': '❌ context_messages must be integer >= 0',
-                        'invalid_summary_chars': '❌ Summary has invalid characters',
-                        'summary_too_long': '❌ Summary too long (max 240 chars)',
-                        'invalid_or_expired_nonce': '⏱️ Prompt expired. Refresh page.',
+                        'invalid_profile_keys': '❌ Profile must have exactly 28 keys',
+                        'missing_profile_key': '❌ Missing required profile key',
+                        'invalid_profile_value': '❌ Profile values must be numbers 0-100',
+                        'missing_answers': '❌ Missing objective_answers',
+                        'checksum_c1_fail': '❌ Checksum c1 failed. Response may be tampered.',
+                        'checksum_c2_fail': '❌ Checksum c2 failed. Response may be tampered.',
+                        'checksum_c3_fail': '❌ Checksum c3 failed. Response may be tampered.',
+                        'invalid_nonce': '⏱️ Prompt expired. Refresh page.',
                         'nonce_already_used': '🔒 Already verified. One attempt only!',
                         'nonce_expired': '⏱️ Time ran out. Refresh page.',
-                        'missing_transcript': '❌ Transcript is required',
-                        'empty_transcript': '❌ Transcript cannot be empty',
-                        'implausible_profile': '❌ Profile looks fake (too many high scores)',
-                        'model_error': '❌ AI returned an error',
+                        'missing_nonce': '❌ Missing nonce in response',
+                        'missing_response': '❌ No response provided',
                     };
                     
                     errMsg = errorMap[errMsg] || `❌ Error: ${errMsg}`;
