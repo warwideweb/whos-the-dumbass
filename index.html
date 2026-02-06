@@ -1296,10 +1296,10 @@
                     <div style="background: rgba(0, 255, 136, 0.05); border: 1px solid rgba(0, 255, 136, 0.2); border-radius: 16px; padding: 24px; margin-bottom: 32px; max-width: 500px; margin-left: auto; margin-right: auto;">
                         <p style="color: var(--neon-green); font-weight: 600; margin-bottom: 16px; font-size: 1.05rem;">✅ Prompt copied!</p>
                         <ol style="color: var(--text-secondary); font-size: 0.95rem; padding-left: 24px; line-height: 1.8;">
-                            <li>Open ChatGPT, Grok, Gemini, or any AI</li>
-                            <li>Paste the Calibration Pack</li>
-                            <li>Answer the AI's follow-up questions <strong style="color: var(--neon-yellow);">(this is where your real score comes from!)</strong></li>
-                            <li>When you see <strong style="color: var(--neon-purple);">IQ2RAW2::...</strong>, copy the <strong style="color: var(--neon-green);">ENTIRE conversation</strong> and paste it below</li>
+                            <li>Open any AI you use (ChatGPT, Grok, Gemini, Claude)</li>
+                            <li>Paste the calibration code into the chat</li>
+                            <li>Copy the <strong style="color: var(--neon-purple);">IQ2ENC::...</strong> response the AI gives you</li>
+                            <li>Paste it below and hit Verify</li>
                         </ol>
                     </div>
                     
@@ -1308,7 +1308,7 @@
                         <textarea 
                             class="response-input" 
                             id="responseInput" 
-                            placeholder="Paste the ENTIRE conversation here (including your answers to the AI's questions)"
+                            placeholder="Paste the IQ2ENC::... response from your AI here"
                             oninput="handleResponseInput()"
                             style="min-height: 100px;"
                         ></textarea>
@@ -1593,7 +1593,7 @@
                 await navigator.clipboard.writeText(data.prompt);
                 
                 step1Text.textContent = '✓ Copied!';
-                showToast('✅ Copied! Paste into any AI, answer its questions, then copy the ENTIRE chat back here.');
+                showToast('✅ Copied! Paste it into any AI and copy back the response.');
                 
                 // Show step 2
                 document.getElementById('step2Section').style.display = 'block';
@@ -1617,16 +1617,13 @@
             const response = (document.getElementById('responseInput').value || '').trim();
             const username = (document.getElementById('usernameInput').value || '').trim();
             
-            // v2.2: Look for IQ2RES2:: or IQ2RAW2:: token, or substantial text (800+ chars)
-            const hasIQ2 = response.includes('IQ2RES2::') || response.includes('IQ2RAW2::');
-            // Mode B fallback: substantial text > 800 chars for AI analysis
-            const hasSubstantialText = response.length >= 800;
-            const hasContent = hasIQ2 || hasSubstantialText;
+            // v3.0: Check for IQ2ENC:: (new format) or legacy IQ2RAW2::/IQ2RES2::
+            const hasToken = response.includes('IQ2ENC::') || response.includes('IQ2RAW2::') || response.includes('IQ2RES2::');
             
-            // Enable button if we have valid content
-            document.getElementById('submitBtn').disabled = !(hasContent && username.length >= 2 && currentNonce);
+            // Enable button if we have a valid token
+            document.getElementById('submitBtn').disabled = !(hasToken && username.length >= 2 && currentNonce);
             
-            if (hasIQ2) {
+            if (hasToken) {
                 document.getElementById('step2').classList.add('completed');
                 document.getElementById('step2').classList.remove('active');
                 document.getElementById('step3').classList.add('active');
@@ -1774,35 +1771,17 @@
                     let errMsg = data.error || 'Verification failed';
                     const detail = data.detail ? `: ${data.detail}` : '';
                     
-                    // User-friendly error messages (v2 + v2.1)
+                    // User-friendly error messages (v3.0)
                     const errorMap = {
-                        'no_token_found': '❌ Could not find IQ2RES2:: or IQ2RAW2:: token. Copy the full response.',
-                        'no_raw_token': '❌ Could not find IQ2RAW2:: or IQ2RES2:: in the response. Copy the full AI output.',
-                        'json_parse_failed': '❌ Could not parse the AI response. Make sure you copied the full output.',
-                        'answer_key_missing': '❌ Missing answers in the AI response.',
-                        'token_mismatch': '❌ Memory token mismatch. The AI didn\'t echo the token correctly.',
-                        'mode_b_scoring': 'ℹ️ Scored using text-only estimate (no IQ2RAW2 token found).',
-                        'invalid_base64': '❌ Invalid response format. Copy exactly as shown.',
-                        'invalid_json': '❌ Invalid JSON in response',
-                        'invalid_version': '❌ Wrong version. Make sure you used the current prompt.',
-                        'invalid_type': '❌ Wrong format (type must be iq2res2 or iq2raw2)',
-                        'nonce_mismatch': '❌ Nonce mismatch. Use the prompt from this page.',
-                        'timestamp_mismatch': '❌ Timestamp mismatch. Use the prompt from this page.',
-                        'timestamp_invalid': '❌ Timestamp doesn\'t match issued challenge.',
-                        'missing_profile': '❌ Missing profile data',
-                        'invalid_profile_keys': '❌ Profile must have exactly 28 keys',
-                        'missing_profile_key': '❌ Missing required profile key',
-                        'invalid_profile_value': '❌ Profile values must be numbers 0-100',
-                        'missing_answers': '❌ Missing answers object',
-                        'missing_answer': '❌ Missing answer for a task',
-                        'invalid_answer': '❌ Invalid answer (must be A/B/C/D)',
-                        'checksum_c1_fail': '❌ Checksum c1 failed. Response may be tampered.',
-                        'checksum_c2_fail': '❌ Checksum c2 failed. Response may be tampered.',
-                        'checksum_c3_fail': '❌ Checksum c3 failed. Response may be tampered.',
-                        'invalid_nonce': '⏱️ Prompt expired. Refresh page.',
+                        'no_enc_token': '❌ Could not find IQ2ENC:: in the response. Copy the AI\'s full output.',
+                        'legacy_format': '⚠️ You used an old prompt. Click Copy Prompt to get a new one.',
+                        'invalid_scores': '❌ Invalid score data. Make sure you copied the complete response.',
+                        'invalid_score_range': '❌ Scores out of range. Don\'t modify the AI output.',
+                        'checksum_failed': '❌ Integrity check failed. Don\'t edit the AI\'s response — copy it exactly.',
+                        'suspicious_scores': '❌ Scores appear manipulated. Try again honestly.',
+                        'invalid_nonce': '⏱️ Prompt expired. Click Copy Prompt again.',
                         'nonce_already_used': '🔒 Already verified. One attempt only!',
-                        'nonce_expired': '⏱️ Time ran out. Refresh page.',
-                        'missing_nonce': '❌ Missing nonce in response',
+                        'nonce_expired': '⏱️ Time ran out. Click Copy Prompt again.',
                         'missing_response': '❌ No response provided',
                     };
                     
